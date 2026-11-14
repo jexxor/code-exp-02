@@ -152,9 +152,14 @@ bool Application::receive_connections(const lsp::Message& message)
         const auto range = location.contains("targetSelectionRange")
                                ? location["targetSelectionRange"]
                                : location.value("range", lsp::Json::object());
-        const auto panel = std::ranges::find(panels, uri, &SourcePanel::uri);
         const int line = range.value("start", lsp::Json::object()).value("line", -1);
-        if (panel == panels.end() || line < 0 || line >= std::ssize(panel->text))
+        if (line < 0)
+            continue;
+        const auto found = std::ranges::find(panels, uri, &SourcePanel::uri);
+        const auto* panel = found != panels.end() ? &*found
+                            : defines             ? panel_for_uri(uri)
+                                                  : nullptr;
+        if (!panel || line >= std::ssize(panel->text))
             continue;
         const auto& text = panel->text[line];
         const auto word =
