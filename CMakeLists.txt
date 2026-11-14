@@ -62,6 +62,14 @@ find_program(
 if(NOT GOPLS_EXECUTABLE)
     set(GOPLS_EXECUTABLE gopls)
 endif()
+set(SOURCE_CANVAS_DEFAULT_PROJECT_ROOT
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    CACHE PATH "Default project"
+)
+set(SOURCE_CANVAS_DEFAULT_BUILD_ROOT
+    "${CMAKE_CURRENT_BINARY_DIR}"
+    CACHE PATH "Default project build"
+)
 configure_file(viewer_config.h.in viewer_config.h @ONLY)
 configure_file(tools/agent_bridge.py agent_bridge.py COPYONLY)
 configure_file(tools/intents.py intents.py COPYONLY)
