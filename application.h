@@ -140,8 +140,11 @@ class Application {
         std::string failure;
     };
     LanguageState cpp_language, go_language;
+    // Layout uses logical pixels; X11 and OpenGL use device pixels.
     int width = 800;
     int height = 600;
+    int pixel_width = 800;
+    int pixel_height = 600;
     Camera camera;
     ZoomAnimation zoom_animation;
     bool initial_view = true;

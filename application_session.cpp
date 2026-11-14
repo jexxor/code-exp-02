@@ -53,13 +53,15 @@ void Application::restore_window(const lsp::Json& state)
     XSizeHints hints{};
     hints.flags = PPosition | PSize | PWinGravity;
     hints.win_gravity = StaticGravity;
-    hints.width = width;
-    hints.height = height;
+    pixel_width = static_cast<int>(std::lround(width * appearance.ui_scale));
+    pixel_height = static_cast<int>(std::lround(height * appearance.ui_scale));
+    hints.width = pixel_width;
+    hints.height = pixel_height;
     hints.x = window.value("x", 0);
     hints.y = window.value("y", 0);
     XSetWMNormalHints(display, this->window, &hints);
-    XMoveResizeWindow(display, this->window, window.value("x", 0), window.value("y", 0), width,
-                      height);
+    XMoveResizeWindow(display, this->window, window.value("x", 0), window.value("y", 0),
+                      pixel_width, pixel_height);
 }
 
 void Application::load_session()

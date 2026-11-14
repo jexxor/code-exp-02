@@ -121,6 +121,7 @@ GLuint shader(GLenum type, const char* source)
 struct GpuRenderer::Impl {
     bool dark_theme = false;
     ColorScheme color_scheme = ColorScheme::System;
+    double ui_scale = 1.0;
     Display* display = nullptr;
     Window window = 0;
     Colormap colormap = 0;
@@ -607,6 +608,11 @@ void GpuRenderer::set_color_scheme(ColorScheme scheme)
     impl->color_scheme = scheme;
 }
 
+void GpuRenderer::set_ui_scale(double scale)
+{
+    impl->ui_scale = scale;
+}
+
 void GpuRenderer::begin(int width, int height)
 {
     glViewport(0, 0, width, height);
@@ -622,7 +628,8 @@ void GpuRenderer::begin(int width, int height)
     glUniform1i(glGetUniformLocation(impl->program, "monokai"),
                 impl->color_scheme == ColorScheme::Monokai);
     glBindVertexArray(impl->vao);
-    glUniform2f(impl->screen_uniform, width, height);
+    glUniform2f(impl->screen_uniform, static_cast<float>(width / impl->ui_scale),
+                static_cast<float>(height / impl->ui_scale));
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, impl->atlas);
     glActiveTexture(GL_TEXTURE1);
@@ -652,10 +659,13 @@ void GpuRenderer::rectangle(CanvasRect bounds, std::array<float, 4> color)
 void GpuRenderer::clip(CanvasRect bounds, int viewport_height)
 {
     glEnable(GL_SCISSOR_TEST);
-    glScissor(static_cast<int>(bounds.origin.x),
-              viewport_height - static_cast<int>(std::ceil(bounds.origin.y + bounds.size.y)),
-              std::max(0, static_cast<int>(std::ceil(bounds.size.x))),
-              std::max(0, static_cast<int>(std::ceil(bounds.size.y))));
+    const auto left = static_cast<int>(std::floor(bounds.origin.x * impl->ui_scale));
+    const auto right =
+        static_cast<int>(std::ceil((bounds.origin.x + bounds.size.x) * impl->ui_scale));
+    const auto top = static_cast<int>(std::floor(bounds.origin.y * impl->ui_scale));
+    const auto bottom =
+        static_cast<int>(std::ceil((bounds.origin.y + bounds.size.y) * impl->ui_scale));
+    glScissor(left, viewport_height - bottom, std::max(0, right - left), std::max(0, bottom - top));
 }
 
 void GpuRenderer::clear_clip()

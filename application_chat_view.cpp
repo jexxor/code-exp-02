@@ -24,7 +24,7 @@ void Application::draw_chat_card()
             renderer->clip(
                 {point,
                  {(chat->bounds.size.x - 24) * camera.zoom, (preview_height - 24) * camera.zoom}},
-                height);
+                pixel_height);
             renderer->draw(chat->context_preview.mesh, point, camera.zoom);
             renderer->clear_clip();
             chat->hits.push_back({ChatHit::Kind::Text,
@@ -71,7 +71,7 @@ void Application::draw_chat_chrome()
         update_document(error, model.error, static_cast<int>(chat->body.size.x), false);
         const auto point = camera.world_to_screen(
             {chat->bounds.origin.x + 24, chat->bounds.origin.y + 64}, viewport());
-        renderer->clip({point, {chat->body.size.x * camera.zoom, 90 * camera.zoom}}, height);
+        renderer->clip({point, {chat->body.size.x * camera.zoom, 90 * camera.zoom}}, pixel_height);
         renderer->draw(error.mesh, point, camera.zoom);
         renderer->clear_clip();
         chat->hits.push_back({ChatHit::Kind::Text,
@@ -110,7 +110,7 @@ void Application::draw_chat_messages()
 {
     const auto screen = camera.world_to_screen(chat->body.origin, viewport());
     renderer->clip({screen, {chat->body.size.x * camera.zoom, chat->body.size.y * camera.zoom}},
-                   height);
+                   pixel_height);
     double y = chat->body.origin.y - chat->scroll;
     for (std::size_t i = 0; i < chat->conversation.entries.size(); ++i) {
         const auto& entry = chat->conversation.entries[i];
@@ -183,7 +183,7 @@ void Application::draw_chat_controls()
                            chat->editor.origin.y + 10 - chat->editor_scroll};
     const auto screen = camera.world_to_screen(text_origin, viewport());
     renderer->clip({origin, {chat->editor.size.x * camera.zoom, chat->editor.size.y * camera.zoom}},
-                   height);
+                   pixel_height);
     if (chat->focused)
         draw_input_selection(screen);
     renderer->draw(chat->composer.mesh, screen, camera.zoom);

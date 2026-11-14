@@ -69,11 +69,15 @@ bool Application::initialize_window()
     try {
         renderer = std::make_unique<GpuRenderer>(display, screen);
         renderer->set_color_scheme(appearance.color_scheme);
+        renderer->set_ui_scale(appearance.ui_scale);
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return false;
     }
     window = renderer->window();
+    pixel_width = static_cast<int>(std::lround(width * appearance.ui_scale));
+    pixel_height = static_cast<int>(std::lround(height * appearance.ui_scale));
+    XResizeWindow(display, window, pixel_width, pixel_height);
 
     XStoreName(display, window, "Source Code - White Window");
     const auto process = static_cast<unsigned long>(getpid());
@@ -155,8 +159,24 @@ int Application::run_window()
         while (running && XPending(display) > 0) {
             XEvent event{};
             XNextEvent(display, &event);
-            if (!XFilterEvent(&event, None))
+            if (!XFilterEvent(&event, None)) {
+                if (appearance.ui_scale != 1.0) {
+                    auto logical = [this](int pixel) {
+                        return static_cast<int>(std::lround(pixel / appearance.ui_scale));
+                    };
+                    if (event.type == ButtonPress || event.type == ButtonRelease) {
+                        event.xbutton.x = logical(event.xbutton.x);
+                        event.xbutton.y = logical(event.xbutton.y);
+                    } else if (event.type == MotionNotify) {
+                        event.xmotion.x = logical(event.xmotion.x);
+                        event.xmotion.y = logical(event.xmotion.y);
+                    } else if (event.type == LeaveNotify) {
+                        event.xcrossing.x = logical(event.xcrossing.x);
+                        event.xcrossing.y = logical(event.xcrossing.y);
+                    }
+                }
                 handle_event(event);
+            }
         }
         if (!running)
             break;

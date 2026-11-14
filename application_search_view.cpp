@@ -64,7 +64,7 @@ void Application::draw_search()
                                       std::max(0.0, caret_x - search.editor.size.x + 26), caret_x);
     const Vec2 input_origin{search.editor.origin.x + 12 - search.editor_scroll,
                             search.editor.origin.y + 10};
-    renderer->clip(search.editor, height);
+    renderer->clip(search.editor, pixel_height);
     if (!search.query.text.empty())
         draw_selection_layout(search.input.layout.get(), input_origin, 1, search.query.selection());
     renderer->draw(search.input.mesh, input_origin, 1);

@@ -115,11 +115,12 @@ The default theme is Monokai. To choose a theme or change the code font, create 
 {
   "theme": "monokai",
   "font_family": "Victor Mono",
-  "font_size": 16
+  "font_size": 16,
+  "ui_scale": 1.0
 }
 ```
 
-Use `"theme": "system"` to follow the desktop's light or dark preference. The code font size is in pixels (8–48); the font family must be installed or bundled with the app. Changes take effect when the app starts. `XDG_CONFIG_HOME` changes the config directory, and `SOURCE_CANVAS_CONFIG` selects a specific config file.
+Use `"theme": "system"` to follow the desktop's light or dark preference. The code font size is in logical pixels (8–48); the font family must be installed or bundled with the app. `ui_scale` scales the whole interface, including code, from 0.5 to 4 (try `2.0` on a high DPI display). Canvas zoom remains separate. Changes take effect when the app starts. `XDG_CONFIG_HOME` changes the config directory, and `SOURCE_CANVAS_CONFIG` selects a specific config file.
 
 > CMake configuration automatically formats the project's C++ and CMake files. Formatting tools and Python `websockets` are configure-time requirements.
 

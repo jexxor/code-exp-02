@@ -12,8 +12,10 @@ void Application::handle_event(const XEvent& event)
             redraw = true;
         break;
     case ConfigureNotify:
-        width = event.xconfigure.width;
-        height = event.xconfigure.height;
+        pixel_width = event.xconfigure.width;
+        pixel_height = event.xconfigure.height;
+        width = std::max(1, static_cast<int>(std::lround(pixel_width / appearance.ui_scale)));
+        height = std::max(1, static_cast<int>(std::lround(pixel_height / appearance.ui_scale)));
         redraw = true;
         break;
     case SelectionNotify:

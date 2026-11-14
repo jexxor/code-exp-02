@@ -79,7 +79,7 @@ void Application::draw()
         zoom_animation.cancel(camera);
         initial_view = false;
     }
-    renderer->begin(width, height);
+    renderer->begin(pixel_width, pixel_height);
     advance_agent_activity();
     draw_regions(view);
     draw_connections(view);
@@ -217,7 +217,7 @@ void Application::draw_popup()
         renderer->rectangle({{x + 3, y + 4}, popup_bounds.size}, {0.1f, 0.15f, 0.25f, 0.1f});
         renderer->rectangle(popup_bounds, {0.97f, 0.98f, 1, 1});
         renderer->clip({{x + 12, y + 12}, {static_cast<double>(text_width), visible_height}},
-                       height);
+                       pixel_height);
         if (shortcuts_visible)
             draw_shortcut_keys({x + 12, y + 12 - popup_scroll});
         if (text_selection.surface == TextSurface::Popup && text_selection.range.text == popup_text)

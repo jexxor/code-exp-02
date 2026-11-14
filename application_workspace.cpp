@@ -252,7 +252,7 @@ bool Application::add_workspace_panel()
 void Application::draw_workspace_preview(const Viewport& view)
 {
     auto& load = *workspace_load;
-    renderer->begin(width, height);
+    renderer->begin(pixel_width, pixel_height);
     draw_regions(view);
     const CanvasRect screen{{0, 0}, {view.width, view.height}};
     for (std::size_t i = load.next; i < load.plan.size(); ++i) {

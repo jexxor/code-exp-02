@@ -10,6 +10,7 @@ struct Appearance {
     ColorScheme color_scheme = ColorScheme::Monokai;
     std::string font_family = "Victor Mono";
     int font_size = 16;
+    double ui_scale = 1.0;
 };
 
 Appearance read_appearance(const std::filesystem::path& path);

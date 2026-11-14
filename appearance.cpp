@@ -64,6 +64,11 @@ Appearance read_appearance(const std::filesystem::path& path)
             invalid(path, "font_size must be between 8 and 48 pixels");
         result.font_size = config["font_size"].get<int>();
     }
+    if (config.contains("ui_scale")) {
+        if (!config["ui_scale"].is_number() || config["ui_scale"] < 0.5 || config["ui_scale"] > 4.0)
+            invalid(path, "ui_scale must be between 0.5 and 4");
+        result.ui_scale = config["ui_scale"].get<double>();
+    }
     return result;
 }
 
