@@ -192,6 +192,7 @@ add_library(
     agent_activity.cpp
     application_agent_activity.cpp
     application.cpp
+    appearance.cpp
     application_workspace.cpp
     directory_picker.cpp
     application_model.cpp

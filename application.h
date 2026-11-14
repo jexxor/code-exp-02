@@ -1,6 +1,7 @@
 #pragma once
 #include "agent_activity.h"
 #include "agent_client.h"
+#include "appearance.h"
 #include "canvas_selection.h"
 #include "canvas_window.h"
 #include "chat_canvas.h"
@@ -54,7 +55,7 @@ class Application {
 
   public:
     static constexpr int reload_exit_code = 75;
-    explicit Application(std::string directory = "") : launch_directory(std::move(directory)) {}
+    explicit Application(std::string directory = "");
     const std::string& directory() const { return launch_directory; }
     int run();
     ~Application();
@@ -64,6 +65,7 @@ class Application {
     Display* display = nullptr;
     std::filesystem::path executable;
     std::string launch_directory;
+    Appearance appearance;
     std::unique_ptr<DirectoryPicker> directory_picker;
     std::string workspace_root;
     std::string workspace_build;
@@ -107,7 +109,6 @@ class Application {
     CanvasSelection text_selection;
     SearchCanvas search;
     bool shortcuts_visible = false;
-    static constexpr const char* monospace_family = "Victor Mono";
     void configure_source_font();
     Clock::time_point save_due = Clock::time_point::max();
     std::unique_ptr<GpuRenderer> renderer;
@@ -123,9 +124,7 @@ class Application {
     int font_height = 0;
     int line_height = 0;
     int header_height = 0;
-    const std::array<unsigned, 12> colors = {0x24292f, 0x0033b3, 0x6f42c1, 0xa31515,
-                                             0x39703a, 0x006b6b, 0x8546a3, 0x795e26,
-                                             0x24292f, 0x875a00, 0x005cc5, 0x6f42c1};
+    const std::array<unsigned, 12> colors;
     std::vector<SourcePanel> panels;
     std::vector<Vec2> file_sizes;
     std::unordered_set<std::string> opened_documents;

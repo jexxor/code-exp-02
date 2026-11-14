@@ -2,7 +2,7 @@
 
 namespace {
 void set_as_prose(PangoAttrList* attributes, std::string_view line, const ProseLine& prose,
-                  const char* code_family)
+                  const char* code_family, int code_size)
 {
     auto add = [&](PangoAttribute* attribute, std::size_t begin, std::size_t end) {
         attribute->start_index = static_cast<guint>(begin);
@@ -25,7 +25,7 @@ void set_as_prose(PangoAttrList* attributes, std::string_view line, const ProseL
         if (close == std::string::npos)
             break;
         add(pango_attr_family_new(code_family), open, close + 1);
-        add(pango_attr_size_new_absolute(15 * PANGO_SCALE), open, close + 1);
+        add(pango_attr_size_new_absolute(code_size * PANGO_SCALE), open, close + 1);
         open = line.find('`', close + 1);
     }
 }
@@ -55,7 +55,8 @@ LayoutHandle Application::make_line(std::string_view line, const std::vector<Tok
     }
     style_document_spans(attributes.get(), web_links(line));
     if (prose)
-        set_as_prose(attributes.get(), line, *prose, monospace_family);
+        set_as_prose(attributes.get(), line, *prose, appearance.font_family.c_str(),
+                     appearance.font_size);
     pango_layout_set_attributes(layout.get(), attributes.get());
     return layout;
 }
@@ -237,7 +238,8 @@ void Application::draw_popup()
 void Application::add_popup_syntax(PangoAttrList* attributes, std::string_view text,
                                    std::size_t offset, HighlightState& state)
 {
-    auto* font = pango_attr_font_desc_new(font_description(monospace_family, 14).get());
+    auto* font = pango_attr_font_desc_new(
+        font_description(appearance.font_family.c_str(), appearance.font_size).get());
     font->start_index = static_cast<guint>(offset);
     font->end_index = static_cast<guint>(offset + text.size());
     pango_attr_list_insert(attributes, font);
@@ -278,7 +280,10 @@ void Application::style_document_spans(PangoAttrList* attributes,
             add(pango_attr_style_new(PANGO_STYLE_ITALIC));
             break;
         case PopupStyle::Link:
-            add(pango_attr_foreground_new(0x2400, 0x4d00, 0x8600));
+            if (appearance.color_scheme == ColorScheme::Monokai)
+                add(pango_attr_foreground_new(0x6600, 0xd900, 0xef00));
+            else
+                add(pango_attr_foreground_new(0x2400, 0x4d00, 0x8600));
             add(pango_attr_underline_new(PANGO_UNDERLINE_SINGLE));
             break;
         }
@@ -288,8 +293,9 @@ void Application::style_document_spans(PangoAttrList* attributes,
 void Application::configure_document(PangoLayout* layout, const PopupDocument& document,
                                      int layout_width, bool prose)
 {
-    const auto font =
-        prose ? font_description("Noto Serif", 17) : font_description(monospace_family, 14);
+    const auto font = prose
+                          ? font_description("Noto Serif", 17)
+                          : font_description(appearance.font_family.c_str(), appearance.font_size);
     pango_layout_set_font_description(layout, font.get());
     pango_layout_set_tabs(layout, nullptr);
     pango_layout_set_single_paragraph_mode(layout, FALSE);
@@ -320,10 +326,11 @@ void Application::configure_document(PangoLayout* layout, const PopupDocument& d
 }
 
 namespace {
-void compact_popup_layout(PangoLayout* layout, const PopupDocument& document, bool prose)
+void compact_popup_layout(PangoLayout* layout, const PopupDocument& document, bool prose,
+                          int code_size)
 {
     const FontHandle font{pango_font_description_copy(pango_layout_get_font_description(layout))};
-    pango_font_description_set_absolute_size(font.get(), (prose ? 16 : 14) * PANGO_SCALE);
+    pango_font_description_set_absolute_size(font.get(), (prose ? 16 : code_size) * PANGO_SCALE);
     pango_layout_set_font_description(layout, font.get());
     pango_layout_set_spacing(layout, PANGO_SCALE);
     const AttributesHandle attributes{pango_attr_list_copy(pango_layout_get_attributes(layout))};
@@ -363,7 +370,7 @@ void Application::update_popup_mesh(int layout_width)
     document.styles = popup_styles;
     document.inline_code = popup_inline_code;
     configure_document(popup_layout.get(), document, layout_width, popup_prose);
-    compact_popup_layout(popup_layout.get(), document, popup_prose);
+    compact_popup_layout(popup_layout.get(), document, popup_prose, appearance.font_size);
     if (shortcuts_visible)
         style_shortcuts(layout_width);
     renderer->upload(popup_mesh, {{popup_layout.get(), {0, 0}}});

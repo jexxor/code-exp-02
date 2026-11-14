@@ -122,18 +122,24 @@ void Application::style_shortcuts(int layout_width)
         attribute->end_index = static_cast<guint>(begin + length);
         pango_attr_list_insert(attributes.get(), attribute);
     };
-    add(pango_attr_foreground_new(0x2900, 0x3500, 0x4500), 0, popup_text.size());
+    if (appearance.color_scheme == ColorScheme::Monokai)
+        add(pango_attr_foreground_new(0xf800, 0xf800, 0xf200), 0, popup_text.size());
+    else
+        add(pango_attr_foreground_new(0x2900, 0x3500, 0x4500), 0, popup_text.size());
     for (const auto& span : popup_styles) {
         if (span.style != PopupStyle::Heading)
             continue;
         add(pango_attr_size_new_absolute((span.begin == 0 ? 28 : 18) * PANGO_SCALE), span.begin,
             span.length);
         add(pango_attr_weight_new(PANGO_WEIGHT_BOLD), span.begin, span.length);
-        add(pango_attr_foreground_new(0x2300, 0x4400, 0x6a00), span.begin, span.length);
+        if (appearance.color_scheme == ColorScheme::Monokai)
+            add(pango_attr_foreground_new(0xa600, 0xe200, 0x2e00), span.begin, span.length);
+        else
+            add(pango_attr_foreground_new(0x2300, 0x4400, 0x6a00), span.begin, span.length);
     }
     for (const auto& [begin, length] : popup_inline_code) {
-        add(pango_attr_family_new(monospace_family), begin, length);
-        add(pango_attr_size_new_absolute(12 * PANGO_SCALE), begin, length);
+        add(pango_attr_family_new(appearance.font_family.c_str()), begin, length);
+        add(pango_attr_size_new_absolute(appearance.font_size * PANGO_SCALE), begin, length);
         add(pango_attr_weight_new(PANGO_WEIGHT_MEDIUM), begin, length);
     }
     pango_layout_set_attributes(popup_layout.get(), attributes.get());

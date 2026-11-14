@@ -9,6 +9,12 @@ template <class Source> int wake_fd(const std::unique_ptr<Source>& source)
 }
 } // namespace
 
+Application::Application(std::string directory)
+    : launch_directory(std::move(directory)), appearance(load_appearance()),
+      colors(syntax_colors(appearance.color_scheme))
+{
+}
+
 bool Application::initialize()
 {
     if (!initialize_window())
@@ -62,6 +68,7 @@ bool Application::initialize_window()
 
     try {
         renderer = std::make_unique<GpuRenderer>(display, screen);
+        renderer->set_color_scheme(appearance.color_scheme);
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return false;
@@ -113,8 +120,9 @@ bool Application::initialize_window()
 
 void Application::configure_source_font()
 {
-    pango_layout_set_font_description(base_layout.get(),
-                                      font_description(monospace_family, 16).get());
+    pango_layout_set_font_description(
+        base_layout.get(),
+        font_description(appearance.font_family.c_str(), appearance.font_size).get());
     pango_layout_get_pixel_size(base_layout.get(), nullptr, &font_height);
     line_height = font_height + 4;
     header_height = line_height * 2;

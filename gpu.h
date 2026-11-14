@@ -1,5 +1,6 @@
 #pragma once
 
+#include "appearance.h"
 #include "canvas.h"
 
 #include <X11/Xlib.h>
@@ -52,6 +53,7 @@ class GpuRenderer {
     void upload_image(GpuMesh& mesh, cairo_surface_t* surface, CanvasRect bounds);
     void paths(GpuMesh& mesh, const std::vector<GpuPath>& paths);
     void set_dark_theme(bool dark);
+    void set_color_scheme(ColorScheme scheme);
     void begin(int width, int height);
     void draw(const GpuMesh& mesh, Vec2 screen_origin, double zoom);
     void rectangle(CanvasRect screen_bounds, std::array<float, 4> color);

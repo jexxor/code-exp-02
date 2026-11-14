@@ -120,6 +120,7 @@ GLuint shader(GLenum type, const char* source)
 
 struct GpuRenderer::Impl {
     bool dark_theme = false;
+    ColorScheme color_scheme = ColorScheme::System;
     Display* display = nullptr;
     Window window = 0;
     Colormap colormap = 0;
@@ -183,6 +184,7 @@ void main() {
 })GLSL";
         const char* fragment_source = R"GLSL(#version 330 core
 uniform bool dark_theme;
+uniform bool monokai;
 uniform sampler2D glyph_atlas;
 uniform sampler2D icon_atlas;
 in vec2 uv;
@@ -192,8 +194,8 @@ out vec4 output_color;
 void main() {
     if (kind == 2 || kind == 4) {
         output_color = texture(icon_atlas, uv);
-        if (kind == 4 && dark_theme)
-            output_color.rgb = vec3(0.84, 0.87, 0.91) * output_color.a;
+        if (kind == 4 && (dark_theme || monokai))
+            output_color.rgb = (monokai ? vec3(0.97, 0.97, 0.95) : vec3(0.84, 0.87, 0.91)) * output_color.a;
         return;
     }
     float coverage = 1.0;
@@ -204,10 +206,11 @@ void main() {
     }
     float alpha = tint.a * coverage;
     vec3 color = tint.rgb;
-    if (dark_theme) {
+    if ((dark_theme || monokai) && !(monokai && kind == 1)) {
         float lightness = (max(max(color.r, color.g), color.b) + min(min(color.r, color.g), color.b)) * 0.5;
-        float target = 0.08 + (1.0 - lightness) * 0.82;
-        color = clamp(color + vec3(target - lightness) + vec3(0.0, 0.008, 0.022), 0.0, 1.0);
+        float target = (monokai ? 0.15 : 0.08) + (1.0 - lightness) * 0.82;
+        color = clamp(color + vec3(target - lightness) +
+                      (monokai ? vec3(0.0, 0.003, -0.022) : vec3(0.0, 0.008, 0.022)), 0.0, 1.0);
         if (kind == 0 && tint.a < 0.15) color = vec3(0.0);
     }
     output_color = vec4(color * alpha, alpha);
@@ -355,7 +358,10 @@ void main() {
         const double baseline =
             placed.origin.y +
             static_cast<double>(pango_layout_iter_get_baseline(iterator)) / PANGO_SCALE;
-        std::array<float, 4> color{0.14f, 0.16f, 0.19f, 1};
+        std::array<float, 4> color =
+            color_scheme == ColorScheme::Monokai
+                ? std::array<float, 4>{248 / 255.0f, 248 / 255.0f, 242 / 255.0f, 1}
+                : std::array<float, 4>{0.14f, 0.16f, 0.19f, 1};
         std::array<float, 4> underline_color{0.8f, 0.13f, 0.13f, 1};
         bool underline = false, strike = false;
         for (auto* item = run->item->analysis.extra_attrs; item; item = item->next) {
@@ -596,16 +602,25 @@ void GpuRenderer::set_dark_theme(bool dark)
     impl->dark_theme = dark;
 }
 
+void GpuRenderer::set_color_scheme(ColorScheme scheme)
+{
+    impl->color_scheme = scheme;
+}
+
 void GpuRenderer::begin(int width, int height)
 {
     glViewport(0, 0, width, height);
-    if (impl->dark_theme)
+    if (impl->color_scheme == ColorScheme::Monokai)
+        glClearColor(39 / 255.0f, 40 / 255.0f, 34 / 255.0f, 1);
+    else if (impl->dark_theme)
         glClearColor(0.08f, 0.088f, 0.102f, 1);
     else
         glClearColor(1, 1, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(impl->program);
     glUniform1i(glGetUniformLocation(impl->program, "dark_theme"), impl->dark_theme);
+    glUniform1i(glGetUniformLocation(impl->program, "monokai"),
+                impl->color_scheme == ColorScheme::Monokai);
     glBindVertexArray(impl->vao);
     glUniform2f(impl->screen_uniform, width, height);
     glActiveTexture(GL_TEXTURE0);

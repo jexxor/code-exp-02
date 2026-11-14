@@ -107,6 +107,20 @@ Bundled fonts are copied into `build/`; keep them beside the executable. Each pr
 
 For Go language features, install [`gopls`](https://go.dev/gopls/) with `go install golang.org/x/tools/gopls@latest`. The build finds it on `PATH` or in the usual Go binary directory; if you install it later, add that directory to `PATH` before launching the viewer. Go files remain browsable without it.
 
+### Appearance
+
+The default theme is Monokai. To choose a theme or change the code font, create `~/.config/source-canvas/config.json`:
+
+```json
+{
+  "theme": "monokai",
+  "font_family": "Victor Mono",
+  "font_size": 16
+}
+```
+
+Use `"theme": "system"` to follow the desktop's light or dark preference. The code font size is in pixels (8–48); the font family must be installed or bundled with the app. Changes take effect when the app starts. `XDG_CONFIG_HOME` changes the config directory, and `SOURCE_CANVAS_CONFIG` selects a specific config file.
+
 > CMake configuration automatically formats the project's C++ and CMake files. Formatting tools and Python `websockets` are configure-time requirements.
 
 ### Agent conversations
