@@ -30,13 +30,16 @@ set_property(
     PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy"
 )
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
-execute_process(
-    COMMAND "${Python3_EXECUTABLE}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake_style.py" --write
-    RESULT_VARIABLE CMAKE_STYLE_RESULT
-)
-if(NOT CMAKE_STYLE_RESULT EQUAL 0)
-    message(FATAL_ERROR "CMake formatting or lint checks failed")
+option(FORMAT_ON_CONFIGURE "Format sources during CMake configuration" ON)
+if(FORMAT_ON_CONFIGURE)
+    execute_process(
+        COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake_style.py" --write
+        RESULT_VARIABLE CMAKE_STYLE_RESULT
+    )
+    if(NOT CMAKE_STYLE_RESULT EQUAL 0)
+        message(FATAL_ERROR "CMake formatting or lint checks failed")
+    endif()
 endif()
 set_property(
     DIRECTORY
@@ -120,12 +123,14 @@ set_property(
     PROPERTY CMAKE_CONFIGURE_DEPENDS
              "${CMAKE_CURRENT_SOURCE_DIR}/.clang-format"
 )
-execute_process(
-    COMMAND "${CLANG_FORMAT_EXECUTABLE}" --style=file -i ${FORMAT_SOURCES}
-    RESULT_VARIABLE FORMAT_RESULT
-)
-if(NOT FORMAT_RESULT EQUAL 0)
-    message(FATAL_ERROR "Automatic C++ formatting failed")
+if(FORMAT_ON_CONFIGURE)
+    execute_process(
+        COMMAND "${CLANG_FORMAT_EXECUTABLE}" --style=file -i ${FORMAT_SOURCES}
+        RESULT_VARIABLE FORMAT_RESULT
+    )
+    if(NOT FORMAT_RESULT EQUAL 0)
+        message(FATAL_ERROR "Automatic C++ formatting failed")
+    endif()
 endif()
 add_custom_target(
     format
