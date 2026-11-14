@@ -424,6 +424,7 @@ class Application {
     SourceHit hit_test(Vec2 screen);
     int panel_at(Vec2 screen);
     int query_at_pointer(const std::string& method);
+    SourcePanel* panel_for_uri(const std::string& uri);
     bool jump_to(const lsp::Json& location);
     void toggle_fold(int index, int source);
     void draw();

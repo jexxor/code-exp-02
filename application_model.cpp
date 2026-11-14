@@ -250,6 +250,33 @@ int Application::query_at_pointer(const std::string& method)
     return server->request(method, panel.uri, std::move(params));
 }
 
+SourcePanel* Application::panel_for_uri(const std::string& uri)
+{
+    auto found = std::ranges::find(panels, uri, &SourcePanel::uri);
+    if (found != panels.end())
+        return &*found;
+    const auto path = lsp::uri_path(uri);
+    if (path.empty())
+        return nullptr;
+    std::ifstream input(path);
+    if (!input)
+        return nullptr;
+    const std::string text{std::istreambuf_iterator<char>(input), {}};
+    auto panel = make_panel(path, text);
+    panel.uri = uri;
+    if (panel.go && !go_language.server)
+        start_language_server(go_language, gopls_executable, "go");
+    update_mesh(panel);
+    panel.bounds.origin = {content_size.x + 96, 0};
+    content_size.x = panel.bounds.origin.x + panel.bounds.size.x;
+    content_size.y = std::max(content_size.y, panel.bounds.size.y);
+    auto* server = server_for(panel);
+    if (server && opened_documents.insert(panel.uri).second)
+        server->open({panel.uri, text});
+    panels.push_back(std::move(panel));
+    return &panels.back();
+}
+
 bool Application::jump_to(const lsp::Json& location)
 {
     const auto uri = location.value("uri", location.value("targetUri", ""));
@@ -258,28 +285,9 @@ bool Application::jump_to(const lsp::Json& location)
                      : location.value("range", lsp::Json::object());
     if (uri.empty() || !range.contains("start"))
         return false;
-    auto found = std::ranges::find(panels, uri, &SourcePanel::uri);
-    if (found == panels.end()) {
-        const auto path = lsp::uri_path(uri);
-        if (path.empty())
-            return false;
-        std::ifstream input(path);
-        if (!input)
-            return false;
-        const std::string text{std::istreambuf_iterator<char>(input), {}};
-        auto panel = make_panel(path, text);
-        if (panel.go && !go_language.server)
-            start_language_server(go_language, gopls_executable, "go");
-        update_mesh(panel);
-        panel.bounds.origin = {content_size.x + 96, 0};
-        content_size.x = panel.bounds.origin.x + panel.bounds.size.x;
-        content_size.y = std::max(content_size.y, panel.bounds.size.y);
-        auto* server = server_for(panel);
-        if (server && opened_documents.insert(panel.uri).second)
-            server->open({panel.uri, text});
-        panels.push_back(std::move(panel));
-        found = std::prev(panels.end());
-    }
+    auto* found = panel_for_uri(uri);
+    if (!found)
+        return false;
     const int line = range["start"].value("line", 0);
     if (line < 0 || line >= std::ssize(found->lines))
         return false;
@@ -298,7 +306,7 @@ bool Application::jump_to(const lsp::Json& location)
                          found->folded.display_lines[line] * line_height + line_height / 2.0};
     zoom_animation.cancel(camera);
     finish_view();
-    focused_line = SourceHit{static_cast<int>(found - panels.begin()), line, byte};
+    focused_line = SourceHit{static_cast<int>(found - panels.data()), line, byte};
     hide_popup();
     redraw = true;
     return true;
