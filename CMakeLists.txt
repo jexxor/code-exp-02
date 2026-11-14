@@ -52,7 +52,8 @@ if(NOT CLANGD_EXECUTABLE)
     set(CLANGD_EXECUTABLE clangd)
 endif()
 find_program(
-    GOPLS_EXECUTABLE NAMES gopls
+    GOPLS_EXECUTABLE
+    NAMES gopls
     HINTS "$ENV{GOBIN}" "$ENV{GOPATH}/bin" "$ENV{HOME}/go/bin"
 )
 if(NOT GOPLS_EXECUTABLE)
