@@ -26,6 +26,7 @@ SourcePanel Application::make_panel(const std::string& path, const std::string& 
     const auto extension = std::filesystem::path(path).extension().string();
     panel.cpp = extension == ".cpp" || extension == ".cc" || extension == ".cxx" ||
                 extension == ".c" || extension == ".h" || extension == ".hpp";
+    panel.go = extension == ".go";
     panel.title = make_line(path, {{0, path.size(), Syntax::Directive}});
     int text_width = 0;
     pango_layout_get_pixel_size(panel.title.get(), &text_width, nullptr);
@@ -159,7 +160,7 @@ void Application::apply_styles(SourcePanel& panel)
             add(pango_attr_foreground_new(((color >> 16) & 255) * 257, ((color >> 8) & 255) * 257,
                                           (color & 255) * 257),
                 token.begin, token.begin + token.length);
-            if (token.modifiers & deprecated_modifier)
+            if (token.modifiers & (panel.go ? go_deprecated_modifier : deprecated_modifier))
                 add(pango_attr_strikethrough_new(TRUE), token.begin, token.begin + token.length);
         }
         apply_diagnostics(panel, line, attributes.get());
@@ -209,12 +210,12 @@ int Application::query_at_pointer(const std::string& method)
     if (std::getenv("SOURCE_CANVAS_TRACE_LSP"))
         std::cerr << method << " at " << mouse_position.x << ',' << mouse_position.y << " -> panel "
                   << hit.panel << " line " << hit.line << " byte " << hit.byte << '\n';
-    if (hit.panel < 0 || !panels[hit.panel].cpp)
+    if (hit.panel < 0 || (!panels[hit.panel].cpp && !panels[hit.panel].go))
         return 0;
     const auto& panel = panels[hit.panel];
     auto* server = server_for(panel);
-    const auto& failure = language_failure;
-    if (!language_ready || !server) {
+    const auto& failure = panel.go ? go_language_failure : language_failure;
+    if (!(panel.go ? go_language_ready : language_ready) || !server) {
         show_popup(failure.empty() ? "Language features are starting…"
                                    : "Language features unavailable: " + failure,
                    mouse_position);
@@ -262,6 +263,8 @@ bool Application::jump_to(const lsp::Json& location)
             return false;
         const std::string text{std::istreambuf_iterator<char>(input), {}};
         auto panel = make_panel(path, text);
+        if (panel.go && !go_language_server)
+            start_go_server({});
         update_mesh(panel);
         panel.bounds.origin = {content_size.x + 96, 0};
         content_size.x = panel.bounds.origin.x + panel.bounds.size.x;

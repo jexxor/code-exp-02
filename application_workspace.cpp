@@ -221,8 +221,9 @@ bool Application::add_workspace_panel()
     if (load.session.is_object())
         restore_folds(panel, load.session["files"].value(file.path, lsp::Json::object()));
     update_mesh(panel);
-    if (panel.cpp && documents.size() < 3) {
-        documents.push_back({panel.uri, panel.source});
+    auto* initial = panel.go ? &go_documents : panel.cpp ? &documents : nullptr;
+    if (initial && initial->size() < 3) {
+        initial->push_back({panel.uri, panel.source});
         opened_documents.insert(panel.uri);
     }
     file.size = panel.bounds.size;
@@ -274,10 +275,23 @@ void Application::finish_workspace_load()
     } catch (const std::exception& error) {
         language_failure = error.what();
     }
+    if (!go_documents.empty())
+        start_go_server(std::move(go_documents));
     initialize_chat();
     load_intent_margin();
     workspace_load.reset();
     redraw = true;
+}
+
+void Application::start_go_server(std::vector<lsp::Document> initial)
+{
+    try {
+        go_language_server = std::make_unique<lsp::LanguageServer>(
+            gopls_executable, workspace_root, workspace_build, std::move(initial),
+            lsp::ServerOptions{.language = "go"});
+    } catch (const std::exception& error) {
+        go_language_failure = error.what();
+    }
 }
 
 void Application::open_directory_picker()

@@ -159,6 +159,9 @@ int Application::run_window()
         if (language_server)
             for (const auto& message : language_server->take_messages())
                 handle_message(message);
+        if (go_language_server)
+            for (const auto& message : go_language_server->take_messages())
+                handle_message(message);
 
         const auto now = Clock::now();
         update_timers(now);
@@ -205,6 +208,7 @@ Application::~Application()
     if (drag_cursor)
         XFreeCursor(display, drag_cursor);
     language_server.reset();
+    go_language_server.reset();
     project_watcher.reset();
     if (window_destroyed && renderer)
         renderer->window_destroyed();
@@ -268,6 +272,7 @@ void Application::wait_for_work(Clock::time_point next_frame)
     std::vector<pollfd> connections = {
         {ConnectionNumber(display), POLLIN, 0},
         {wake_fd(language_server), POLLIN, 0},
+        {wake_fd(go_language_server), POLLIN, 0},
         {wake_fd(project_watcher), POLLIN, 0},
         {chat && chat->client ? chat->client->event_fd() : -1, POLLIN, 0},
         {wake_fd(system_theme), POLLIN, 0},

@@ -78,7 +78,7 @@ bool Application::open_link(const std::string& destination)
 
 lsp::LanguageServer* Application::server_for(const SourcePanel& panel)
 {
-    return panel.cpp ? language_server.get() : nullptr;
+    return panel.go ? go_language_server.get() : panel.cpp ? language_server.get() : nullptr;
 }
 bool Application::open_document_link(Vec2 pointer)
 {

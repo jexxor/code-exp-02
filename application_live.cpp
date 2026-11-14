@@ -59,6 +59,8 @@ void Application::apply_project_change(const ProjectChange& change)
         panels.erase(found);
     } else if (found == panels.end()) {
         auto panel = make_panel(change.path, *change.source);
+        if (panel.go && !go_language_server)
+            start_go_server({});
         update_mesh(panel);
         panels.push_back(std::move(panel));
         place_in_folder(panels.back());
