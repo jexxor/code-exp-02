@@ -82,7 +82,6 @@ if(NOT WEBSOCKETS_RESULT EQUAL 0)
         FATAL_ERROR "Python websockets is required (install python3-websockets)"
     )
 endif()
-file(COPY fonts/noto-serif DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/fonts")
 
 foreach(
     font_file

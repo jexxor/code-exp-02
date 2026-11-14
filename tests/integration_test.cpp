@@ -264,9 +264,9 @@ struct ApplicationTestAccess {
         app.draw();
         expect(app.popup_prose && app.popup_styles.size() == 2,
                "Documentation must combine prose and code typography");
-        expect(std::string(pango_font_description_get_family(
-                   pango_layout_get_font_description(app.popup_layout.get()))) == "Noto Serif",
-               "Documentation prose must use the bundled serif reading face");
+        expect(std::string(pango_font_description_get_family(pango_layout_get_font_description(
+                   app.popup_layout.get()))) == app.appearance.font_family,
+               "Documentation must use the configured font");
         const auto code = app.popup_text.find("const int");
         auto* iterator =
             pango_attr_list_get_iterator(pango_layout_get_attributes(app.popup_layout.get()));
@@ -278,11 +278,11 @@ struct ApplicationTestAccess {
                 const auto* font = reinterpret_cast<PangoAttrFontDesc*>(
                     pango_attr_iterator_get(iterator, PANGO_ATTR_FONT_DESC));
                 monospace = font && std::string(pango_font_description_get_family(font->desc)) ==
-                                        "Victor Mono";
+                                        app.appearance.font_family;
             }
         } while (pango_attr_iterator_next(iterator));
         pango_attr_iterator_destroy(iterator);
-        expect(monospace, "Inline code must keep the code face inside serif prose");
+        expect(monospace, "Inline code must use the configured font");
         app.draw();
         expect(app.popup_mesh.vertices > 0,
                "Typeset documentation must upload a renderable GPU mesh");

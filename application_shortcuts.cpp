@@ -111,7 +111,8 @@ void Application::style_shortcuts(int layout_width)
         pango_layout_set_text(popup_layout.get(), stacked.c_str(),
                               static_cast<int>(stacked.size()));
     }
-    pango_layout_set_font_description(popup_layout.get(), font_description("sans-serif", 14).get());
+    pango_layout_set_font_description(popup_layout.get(),
+                                      font_description(appearance.font_family.c_str(), 14).get());
     const TabsHandle tabs{pango_tab_array_new(1, TRUE)};
     pango_tab_array_set_tab(tabs.get(), 0, PANGO_TAB_LEFT, std::min(280, layout_width / 2));
     pango_layout_set_tabs(popup_layout.get(), tabs.get());

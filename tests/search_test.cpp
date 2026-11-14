@@ -124,9 +124,9 @@ struct ApplicationTestAccess {
                    app.popup_text.contains("Ctrl+V"),
                "Question mark must open the complete shortcut guide");
         app.draw();
-        expect(std::string(pango_font_description_get_family(
-                   pango_layout_get_font_description(app.popup_layout.get()))) == "sans-serif",
-               "The shortcut guide must use UI typography rather than documentation prose");
+        expect(std::string(pango_font_description_get_family(pango_layout_get_font_description(
+                   app.popup_layout.get()))) == app.appearance.font_family,
+               "The shortcut guide must use the configured font");
         const int original_width = app.width;
         app.width = 360;
         app.draw();

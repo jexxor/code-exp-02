@@ -1,8 +1,7 @@
 #include "application.h"
 
 namespace {
-void set_as_prose(PangoAttrList* attributes, std::string_view line, const ProseLine& prose,
-                  const char* code_family, int code_size)
+void set_as_prose(PangoAttrList* attributes, std::string_view line, const ProseLine& prose)
 {
     auto add = [&](PangoAttribute* attribute, std::size_t begin, std::size_t end) {
         attribute->start_index = static_cast<guint>(begin);
@@ -15,19 +14,9 @@ void set_as_prose(PangoAttrList* attributes, std::string_view line, const ProseL
     }
     if (prose.body == line.size())
         return;
-    add(pango_attr_family_new("Noto Serif"), prose.body, line.size());
-    add(pango_attr_size_new_absolute(17 * PANGO_SCALE), prose.body, line.size());
     add(pango_attr_style_new(PANGO_STYLE_NORMAL), prose.body, line.size());
     if (prose.heading)
         add(pango_attr_weight_new(PANGO_WEIGHT_BOLD), prose.body, line.size());
-    for (auto open = line.find('`', prose.body); open != std::string::npos;) {
-        const auto close = line.find('`', open + 1);
-        if (close == std::string::npos)
-            break;
-        add(pango_attr_family_new(code_family), open, close + 1);
-        add(pango_attr_size_new_absolute(code_size * PANGO_SCALE), open, close + 1);
-        open = line.find('`', close + 1);
-    }
 }
 } // namespace
 
@@ -55,8 +44,7 @@ LayoutHandle Application::make_line(std::string_view line, const std::vector<Tok
     }
     style_document_spans(attributes.get(), web_links(line));
     if (prose)
-        set_as_prose(attributes.get(), line, *prose, appearance.font_family.c_str(),
-                     appearance.font_size);
+        set_as_prose(attributes.get(), line, *prose);
     pango_layout_set_attributes(layout.get(), attributes.get());
     return layout;
 }
@@ -293,9 +281,7 @@ void Application::style_document_spans(PangoAttrList* attributes,
 void Application::configure_document(PangoLayout* layout, const PopupDocument& document,
                                      int layout_width, bool prose)
 {
-    const auto font = prose
-                          ? font_description("Noto Serif", 17)
-                          : font_description(appearance.font_family.c_str(), appearance.font_size);
+    const auto font = font_description(appearance.font_family.c_str(), appearance.font_size);
     pango_layout_set_font_description(layout, font.get());
     pango_layout_set_tabs(layout, nullptr);
     pango_layout_set_single_paragraph_mode(layout, FALSE);

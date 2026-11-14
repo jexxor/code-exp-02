@@ -57,13 +57,6 @@ bool Application::initialize_window()
         }
     }
 
-    for (const char* face : {"Regular", "Bold", "Italic", "BoldItalic"}) {
-        const auto path = executable.parent_path() / "fonts/noto-serif" /
-                          (std::string("NotoSerif-") + face + ".ttf");
-        FcConfigAppFontAddFile(FcConfigGetCurrent(),
-                               reinterpret_cast<const FcChar8*>(path.c_str()));
-    }
-
     screen = DefaultScreen(display);
 
     try {
