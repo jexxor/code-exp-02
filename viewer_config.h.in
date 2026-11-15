@@ -1,8 +1,15 @@
 #pragma once
 
+#ifdef __APPLE__
+inline constexpr const char* project_root = "";
+inline constexpr const char* project_build = "";
+inline constexpr const char* clangd_executable = "clangd";
+inline constexpr const char* gopls_executable = "gopls";
+inline constexpr const char* python_executable = "python3";
+#else
 inline constexpr const char* project_root = R"CONFIG(@SOURCE_CANVAS_DEFAULT_PROJECT_ROOT@)CONFIG";
 inline constexpr const char* project_build = R"CONFIG(@SOURCE_CANVAS_DEFAULT_BUILD_ROOT@)CONFIG";
 inline constexpr const char* clangd_executable = R"CONFIG(@CLANGD_EXECUTABLE@)CONFIG";
 inline constexpr const char* gopls_executable = R"CONFIG(@GOPLS_EXECUTABLE@)CONFIG";
-
 inline constexpr const char* python_executable = R"CONFIG(@Python3_EXECUTABLE@)CONFIG";
+#endif

@@ -31,6 +31,25 @@ int load_priority(const std::string& path)
 void Application::begin_workspace_load()
 {
     const auto* root = std::getenv("SOURCE_CANVAS_PROJECT_ROOT");
+#ifdef __APPLE__
+    if (launch_directory.empty() && !(root && *root)) {
+        const auto* home = std::getenv("HOME");
+        DirectoryPicker picker(home && *home ? home : "/", 0);
+        for (;;) {
+            if (auto selection = picker.take_result()) {
+                if (!selection->error.empty())
+                    throw std::runtime_error(selection->error);
+                if (selection->directory.empty())
+                    throw std::runtime_error("No project directory selected");
+                launch_directory = std::move(selection->directory);
+                break;
+            }
+            pollfd ready{picker.event_fd(), POLLIN, 0};
+            if (poll(&ready, 1, -1) < 0 && errno != EINTR)
+                throw std::runtime_error("Could not wait for the project directory picker");
+        }
+    }
+#endif
     workspace_root = std::filesystem::canonical(!launch_directory.empty() ? launch_directory.c_str()
                                                 : root && *root           ? root
                                                                           : project_root)
@@ -38,7 +57,8 @@ void Application::begin_workspace_load()
     if (!std::filesystem::is_directory(workspace_root))
         throw std::runtime_error("Workspace must be a directory: " + workspace_root);
     workspace_build = project_build;
-    if (workspace_root != std::filesystem::weakly_canonical(project_root).string()) {
+    if (!*project_root ||
+        workspace_root != std::filesystem::weakly_canonical(project_root).string()) {
         const auto directory = std::filesystem::path(workspace_root);
         workspace_build = (directory / ".cache/source-canvas").string();
         for (const auto& candidate : {directory / "build", directory})
