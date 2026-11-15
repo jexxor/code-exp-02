@@ -40,7 +40,11 @@ bool Application::open_link(const std::string& destination)
     if (destination.empty())
         return false;
     if (destination.starts_with("http://") || destination.starts_with("https://")) {
+#ifdef __APPLE__
+        std::string program = "open", address = destination;
+#else
         std::string program = "xdg-open", address = destination;
+#endif
         std::array<char*, 3> arguments{program.data(), address.data(), nullptr};
         GError* failure = nullptr;
         const bool opened = g_spawn_async(nullptr, arguments.data(), nullptr, G_SPAWN_SEARCH_PATH,

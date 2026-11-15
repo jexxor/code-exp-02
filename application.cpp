@@ -1,4 +1,5 @@
 #include "application.h"
+#include "executable_path.h"
 #include <X11/Xatom.h>
 #include <unistd.h>
 
@@ -41,7 +42,7 @@ bool Application::initialize_window()
     }
 
     std::error_code path_error;
-    executable = std::filesystem::read_symlink("/proc/self/exe", path_error);
+    executable = executable_path(path_error);
     if (path_error) {
         std::cerr << "Could not locate the executable: " << path_error.message() << '\n';
         return false;

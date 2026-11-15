@@ -18,7 +18,11 @@
 #include <set>
 #include <span>
 #include <stdexcept>
+#ifdef __APPLE__
+#include <CoreServices/CoreServices.h>
+#else
 #include <sys/inotify.h>
+#endif
 #include <thread>
 #include <unistd.h>
 
@@ -198,15 +202,46 @@ struct ProjectWatcher::Impl {
     static constexpr auto settle = 120ms;
     std::string root;
     ProjectSnapshot snapshot;
+#ifdef __APPLE__
+    FSEventStreamRef stream = nullptr;
+    CFRunLoopRef run_loop = nullptr;
+    std::mutex run_loop_mutex;
+#else
     FileDescriptor notify{inotify_init1(IN_NONBLOCK | IN_CLOEXEC)};
     WakeSignal stop;
     std::set<std::string> watched;
+#endif
     Mailbox<ProjectChange> changes;
     std::jthread worker;
 
+#ifdef __APPLE__
+    static void changed(ConstFSEventStreamRef, void* context, std::size_t, void*,
+                        const FSEventStreamEventFlags*, const FSEventStreamEventId*)
+    {
+        static_cast<Impl*>(context)->rescan();
+    }
+#endif
     Impl(std::string root, ProjectSnapshot initial)
         : root(std::move(root)), snapshot(std::move(initial))
     {
+#ifdef __APPLE__
+        const auto* path = CFStringCreateWithCString(kCFAllocatorDefault, this->root.c_str(),
+                                                     kCFStringEncodingUTF8);
+        if (!path)
+            throw std::runtime_error("Could not encode the project path for file watching");
+        const void* values[] = {path};
+        const auto* paths = CFArrayCreate(kCFAllocatorDefault, values, 1, &kCFTypeArrayCallBacks);
+        FSEventStreamContext context{0, this, nullptr, nullptr, nullptr};
+        stream = FSEventStreamCreate(kCFAllocatorDefault, changed, &context, paths,
+                                    kFSEventStreamEventIdSinceNow, 0.12,
+                                    kFSEventStreamCreateFlagFileEvents |
+                                        kFSEventStreamCreateFlagNoDefer);
+        CFRelease(paths);
+        CFRelease(path);
+        if (!stream)
+            throw std::runtime_error("Could not watch the project directory");
+        worker = std::jthread([this](const std::stop_token& stopping) { run(stopping); });
+#else
         if (!notify)
             throw std::runtime_error("Could not create project watch descriptors");
         add_watches();
@@ -214,7 +249,17 @@ struct ProjectWatcher::Impl {
             const std::stop_callback wake(stopping, [this] { stop.raise(); });
             run(stopping);
         });
+#endif
     }
+    ~Impl()
+    {
+#ifdef __APPLE__
+        worker.request_stop();
+        worker.join();
+        FSEventStreamRelease(stream);
+#endif
+    }
+#ifndef __APPLE__
     void add_watches()
     {
         auto directories = project_paths(root, true);
@@ -229,6 +274,7 @@ struct ProjectWatcher::Impl {
                 watched.insert(path);
         }
     }
+#endif
     void rescan()
     {
         auto next = read_project(root);
@@ -237,6 +283,32 @@ struct ProjectWatcher::Impl {
     }
     void run(const std::stop_token& stopping)
     {
+#ifdef __APPLE__
+        const auto loop = CFRunLoopGetCurrent();
+        CFRetain(loop);
+        {
+            const std::scoped_lock lock(run_loop_mutex);
+            run_loop = loop;
+        }
+        const std::stop_callback wake(stopping, [this] {
+            const std::scoped_lock lock(run_loop_mutex);
+            if (run_loop)
+                CFRunLoopStop(run_loop);
+        });
+        FSEventStreamScheduleWithRunLoop(stream, loop, kCFRunLoopDefaultMode);
+        if (FSEventStreamStart(stream)) {
+            rescan();
+            while (!stopping.stop_requested())
+                CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.5, true);
+            FSEventStreamStop(stream);
+        }
+        FSEventStreamInvalidate(stream);
+        {
+            const std::scoped_lock lock(run_loop_mutex);
+            run_loop = nullptr;
+        }
+        CFRelease(loop);
+#else
         using Clock = std::chrono::steady_clock;
         auto due = Clock::now();
         while (!stopping.stop_requested()) {
@@ -263,6 +335,7 @@ struct ProjectWatcher::Impl {
                 due = Clock::time_point::max();
             }
         }
+#endif
     }
 };
 ProjectWatcher::ProjectWatcher(std::string root, ProjectSnapshot initial)

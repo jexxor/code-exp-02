@@ -181,6 +181,9 @@ target_link_libraries(
 add_library(project_watch project_watch.cpp)
 target_include_directories(project_watch PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(project_watch PUBLIC Threads::Threads)
+if(APPLE)
+    target_link_libraries(project_watch PRIVATE "-framework CoreServices")
+endif()
 
 add_library(language_server lsp.cpp)
 target_link_libraries(

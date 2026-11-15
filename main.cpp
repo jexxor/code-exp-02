@@ -1,4 +1,5 @@
 #include "application.h"
+#include "executable_path.h"
 
 #include <cstring>
 #include <unistd.h>
@@ -10,7 +11,7 @@ int main(int argc, char* argv[])
         return 1;
     }
     std::string directory = argc == 2 ? argv[1] : "";
-    const auto executable = std::filesystem::read_symlink("/proc/self/exe").string();
+    const auto executable = executable_path().string();
     int result;
     try {
         Application application(directory);

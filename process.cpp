@@ -35,9 +35,18 @@ ChildProcess::ChildProcess(std::span<const std::string> arguments, const std::st
                            const std::string& error_log)
 {
     std::array<int, 2> sockets{};
+#ifdef __APPLE__
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets.data()) != 0)
+#else
     if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sockets.data()) != 0)
+#endif
         throw std::runtime_error("Could not create a socket for the " + role);
     FileDescriptor ours{sockets[0]}, theirs{sockets[1]};
+#ifdef __APPLE__
+    for (const int descriptor : sockets)
+        if (fcntl(descriptor, F_SETFD, FD_CLOEXEC) < 0)
+            throw std::runtime_error("Could not configure a socket for the " + role);
+#endif
     FileActions actions;
     posix_spawn_file_actions_init(&actions);
     posix_spawn_file_actions_adddup2(&actions, theirs.get(), STDIN_FILENO);

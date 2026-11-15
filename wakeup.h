@@ -5,7 +5,11 @@
 #include <iterator>
 #include <mutex>
 #include <stdexcept>
+#ifdef __APPLE__
+#include <fcntl.h>
+#else
 #include <sys/eventfd.h>
+#endif
 #include <unistd.h>
 #include <utility>
 #include <vector>
@@ -37,26 +41,54 @@ class FileDescriptor {
 
 class WakeSignal {
   public:
-    WakeSignal() : event(eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC))
+    WakeSignal()
     {
+#ifdef __APPLE__
+        int ends[2];
+        if (::pipe(ends) != 0)
+            throw std::runtime_error("Could not create a wakeup pipe");
+        event.reset(ends[0]);
+        writer.reset(ends[1]);
+        for (const int descriptor : ends) {
+            if (::fcntl(descriptor, F_SETFL, O_NONBLOCK) < 0 ||
+                ::fcntl(descriptor, F_SETFD, FD_CLOEXEC) < 0)
+                throw std::runtime_error("Could not configure a wakeup pipe");
+        }
+#else
+        event.reset(eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC));
         if (!event)
             throw std::runtime_error("Could not create a wakeup descriptor");
+#endif
     }
     [[nodiscard]] int fd() const { return event.get(); }
     void raise() const
     {
+#ifdef __APPLE__
+        const std::uint8_t value = 1;
+        (void)!::write(writer.get(), &value, sizeof(value));
+#else
         const std::uint64_t value = 1;
         (void)!::write(event.get(), &value, sizeof(value));
+#endif
     }
     void clear() const
     {
+#ifdef __APPLE__
+        std::uint8_t values[256];
+        while (::read(event.get(), values, sizeof(values)) > 0) {
+        }
+#else
         std::uint64_t value;
         while (::read(event.get(), &value, sizeof(value)) > 0) {
         }
+#endif
     }
 
   private:
     FileDescriptor event;
+#ifdef __APPLE__
+    FileDescriptor writer;
+#endif
 };
 
 template <class Item> class Mailbox {
