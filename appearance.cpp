@@ -13,8 +13,14 @@ std::filesystem::path appearance_path()
         return path;
     if (const auto* root = std::getenv("XDG_CONFIG_HOME"); root && *root)
         return std::filesystem::path(root) / "source-canvas/config.json";
-    if (const auto* home = std::getenv("HOME"); home && *home)
+    if (const auto* home = std::getenv("HOME"); home && *home) {
+#ifdef __APPLE__
+        return std::filesystem::path(home) /
+               "Library/Application Support/source-canvas/config.json";
+#else
         return std::filesystem::path(home) / ".config/source-canvas/config.json";
+#endif
+    }
     return {};
 }
 

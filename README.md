@@ -109,7 +109,7 @@ For Go language features, install [`gopls`](https://go.dev/gopls/) with `go inst
 
 ### Appearance
 
-The default theme is Monokai. To choose a theme or change the font, create `~/.config/source-canvas/config.json`:
+The default theme is Monokai. To choose a theme or change the font, create `~/.config/source-canvas/config.json` on Linux or `~/Library/Application Support/source-canvas/config.json` on macOS:
 
 ```json
 {
