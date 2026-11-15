@@ -1,7 +1,7 @@
-name: macOS port
+name: macOS builds and releases
 on:
   push:
-    branches: [macos-support]
+    branches: [dev, macos-support]
   workflow_dispatch:
 permissions:
   contents: read
@@ -111,3 +111,40 @@ jobs:
           test -f "$bundle/Contents/MacOS/intents.py"
           test -f "$bundle/Contents/MacOS/fonts/victor-mono/VictorMono-Regular.ttf"
           file "$bundle/Contents/MacOS/white_window" | grep "$(uname -m)"
+      - name: Package a portable app
+        run: |
+          brew install dylibbundler
+          bash tools/package_macos.sh \
+            /tmp/source-canvas-macos-build/white_window.app \
+            "$RUNNER_TEMP/source-canvas-macos-$(uname -m).zip"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: macos-${{ matrix.runner }}
+          path: ${{ runner.temp }}/source-canvas-macos-*.zip
+          if-no-files-found: error
+  publish:
+    if: github.ref == 'refs/heads/dev'
+    needs: platform-core
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: macos-*
+          merge-multiple: true
+          path: dist
+      - name: Publish experimental release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="dev-${GITHUB_SHA:0:12}"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/*.zip --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$tag" dist/*.zip \
+              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "Source Canvas dev ${GITHUB_SHA:0:12}" \
+              --notes 'Experimental macOS 14+ builds. Interactive UI testing is pending. Install clangd, gopls and Python dependencies separately for those features.' \
+              --prerelease --latest=false
+          fi

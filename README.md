@@ -123,7 +123,7 @@ cmake --build build-macos --target white_window --parallel 2
 open build-macos/white_window.app
 ```
 
-Pass a project with `open build-macos/white_window.app --args /path/to/project`. The bundle contains its fonts and agent scripts, but still loads Homebrew libraries from the build Mac. It is an experimental build, not yet a standalone release. See [macOS port status](docs/macos-feasibility.md).
+Pass a project with `open build-macos/white_window.app --args /path/to/project`, or launch it without arguments to choose a folder. Each push to `dev` publishes experimental Apple Silicon and Intel `.app` archives on the [releases page](https://github.com/jexxor/code-exp-02/releases). CI bundles the Homebrew libraries and signs each app ad hoc. The interactive UI still needs testing on a Mac. For Go and C++ navigation, install `gopls` and `clangd` on the Mac; agent chat also needs Python 3 with `websockets`.
 
 ### Appearance
 
