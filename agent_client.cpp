@@ -70,7 +70,8 @@ struct AgentClient::Impl {
     }
     std::string_view write_some(std::string_view pending) const
     {
-        const auto count = ::send(bridge.stream(), pending.data(), pending.size(), MSG_NOSIGNAL);
+        const auto count =
+            ::send(bridge.stream(), pending.data(), pending.size(), ChildProcess::send_flags);
         if (count >= 0)
             return pending.substr(static_cast<std::size_t>(count));
         if (errno != EAGAIN && errno != EINTR)

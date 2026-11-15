@@ -46,6 +46,9 @@ ChildProcess::ChildProcess(std::span<const std::string> arguments, const std::st
     for (const int descriptor : sockets)
         if (fcntl(descriptor, F_SETFD, FD_CLOEXEC) < 0)
             throw std::runtime_error("Could not configure a socket for the " + role);
+    const int no_sigpipe = 1;
+    if (setsockopt(ours.get(), SOL_SOCKET, SO_NOSIGPIPE, &no_sigpipe, sizeof(no_sigpipe)) < 0)
+        throw std::runtime_error("Could not suppress SIGPIPE for the " + role);
 #endif
     FileActions actions;
     posix_spawn_file_actions_init(&actions);

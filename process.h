@@ -5,11 +5,17 @@
 #include <chrono>
 #include <span>
 #include <string>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <utility>
 
 class ChildProcess {
   public:
+#ifdef __APPLE__
+    static constexpr int send_flags = 0; // SO_NOSIGPIPE is set on the socket.
+#else
+    static constexpr int send_flags = MSG_NOSIGNAL;
+#endif
     ChildProcess() = default;
     ChildProcess(std::span<const std::string> arguments, const std::string& role,
                  const std::string& error_log = {});

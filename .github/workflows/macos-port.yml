@@ -54,3 +54,18 @@ jobs:
             done
             exit 1
           fi
+      - name: Compile language and agent transports
+        run: |
+          brew install nlohmann-json
+          for source in lsp.cpp agent_client.cpp; do
+            if ! clang++ -std=c++23 -fexperimental-library -mmacosx-version-min=14.0 \
+              -I. -I"$(brew --prefix nlohmann-json)/include" \
+              -c "$source" -o "/tmp/source-canvas-${source%.cpp}.o" \
+              > /tmp/source-canvas-transport-build.log 2>&1; then
+              cat /tmp/source-canvas-transport-build.log
+              tail -20 /tmp/source-canvas-transport-build.log | while IFS= read -r line; do
+                echo "::error title=macOS transport build::$line"
+              done
+              exit 1
+            fi
+          done

@@ -433,7 +433,7 @@ struct LanguageServer::Impl {
         if (outgoing.empty())
             return;
         const auto sent = send(server.stream(), outgoing.data() + written,
-                               outgoing.size() - written, MSG_NOSIGNAL);
+                               outgoing.size() - written, ChildProcess::send_flags);
         if (sent > 0) {
             written += static_cast<std::size_t>(sent);
             if (written == outgoing.size()) {
