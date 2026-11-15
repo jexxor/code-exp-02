@@ -280,6 +280,23 @@ endif()
 add_executable(white_window main.cpp)
 target_include_directories(white_window PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 target_link_libraries(white_window PRIVATE application_core)
+if(APPLE)
+    set_target_properties(
+        white_window PROPERTIES MACOSX_BUNDLE TRUE
+                                MACOSX_BUNDLE_INFO_PLIST
+                                "${CMAKE_CURRENT_SOURCE_DIR}/macos/Info.plist.in"
+    )
+    add_custom_command(
+        TARGET white_window POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory
+                "${CMAKE_CURRENT_BINARY_DIR}/fonts"
+                "$<TARGET_FILE_DIR:white_window>/fonts"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "${CMAKE_CURRENT_BINARY_DIR}/agent_bridge.py"
+                "${CMAKE_CURRENT_BINARY_DIR}/intents.py"
+                "$<TARGET_FILE_DIR:white_window>"
+    )
+endif()
 
 include(CTest)
 if(BUILD_TESTING)

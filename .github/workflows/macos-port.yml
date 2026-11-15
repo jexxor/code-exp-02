@@ -97,3 +97,10 @@ jobs:
             done
             exit 1
           fi
+          bundle=/tmp/source-canvas-macos-build/white_window.app
+          plutil -lint "$bundle/Contents/Info.plist"
+          test -f "$bundle/Contents/MacOS/white_window"
+          test -f "$bundle/Contents/MacOS/agent_bridge.py"
+          test -f "$bundle/Contents/MacOS/intents.py"
+          test -f "$bundle/Contents/MacOS/fonts/victor-mono/VictorMono-Regular.ttf"
+          file "$bundle/Contents/MacOS/white_window" | grep "$(uname -m)"
