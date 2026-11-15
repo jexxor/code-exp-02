@@ -142,7 +142,7 @@ void Application::spawn_agent_window(Vec2 world, lsp::Json context)
     content_size.y = std::max(content_size.y, world.y + chat->bounds.size.y);
     schedule_save();
 }
-void Application::dismiss_empty_chat(const XEvent& event, Vec2 pointer)
+void Application::dismiss_empty_chat(const WindowEvent& event, Vec2 pointer)
 {
     const bool canvas_click = event.xbutton.button >= Button1 && event.xbutton.button <= Button3;
     if (!drag_button && canvas_click && chat && chat->visible && chat->composing &&

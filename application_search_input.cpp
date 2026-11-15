@@ -27,7 +27,7 @@ std::string input_text(XIC context, XKeyEvent event)
     return text;
 }
 } // namespace
-bool Application::search_edit_key(const XEvent& event, KeySym key)
+bool Application::search_edit_key(const WindowEvent& event, KeySym key)
 {
     const auto state = event.xkey.state;
     const bool shift = state & ShiftMask;
@@ -76,7 +76,7 @@ bool Application::search_edit_key(const XEvent& event, KeySym key)
         return false;
     }
 }
-bool Application::search_key(const XEvent& event)
+bool Application::search_key(const WindowEvent& event)
 {
     auto key_event = event.xkey;
     const auto key = XLookupKeysym(&key_event, 0);
@@ -116,7 +116,7 @@ bool Application::search_key(const XEvent& event)
         update_search();
     return true;
 }
-bool Application::search_button(const XEvent& event, Vec2 pointer)
+bool Application::search_button(const WindowEvent& event, Vec2 pointer)
 {
     if (!search.active)
         return false;
@@ -143,7 +143,7 @@ bool Application::search_button(const XEvent& event, Vec2 pointer)
         }
     return true;
 }
-void Application::paste_search(const XEvent& event)
+void Application::paste_search(const WindowEvent& event)
 {
     auto text = pasted_text(event);
     if (!text || !search.active || text->size() > 1024)

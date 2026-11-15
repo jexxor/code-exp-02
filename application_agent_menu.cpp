@@ -23,7 +23,7 @@ void Application::open_chat_input(Vec2 pointer)
     }
     spawn_agent_window(position, std::move(context));
 }
-bool Application::agent_window_key(const XEvent& event)
+bool Application::agent_window_key(const WindowEvent& event)
 {
     auto key_event = event.xkey;
     const auto key = XLookupKeysym(&key_event, 0);

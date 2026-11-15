@@ -157,7 +157,7 @@ int Application::run_window()
         if (!zoom_animation.active(camera))
             last_frame = Clock::now();
         while (running && XPending(display) > 0) {
-            XEvent event{};
+            WindowEvent event{};
             XNextEvent(display, &event);
             if (!XFilterEvent(&event, None)) {
                 if (appearance.ui_scale != 1.0) {

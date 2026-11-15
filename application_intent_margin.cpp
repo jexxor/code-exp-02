@@ -206,7 +206,7 @@ bool Application::clear_intent_selection()
     return true;
 }
 
-bool Application::intent_margin_button(const XEvent& event, Vec2 pointer)
+bool Application::intent_margin_button(const WindowEvent& event, Vec2 pointer)
 {
     const auto button = event.xbutton.button;
     if (drag_button || (button != Button1 && button != Button2))
@@ -226,7 +226,7 @@ bool Application::intent_margin_button(const XEvent& event, Vec2 pointer)
     return true;
 }
 
-bool Application::intent_margin_key(const XEvent& event)
+bool Application::intent_margin_key(const WindowEvent& event)
 {
     auto key = event.xkey;
     return XLookupKeysym(&key, 0) == XK_Escape && popup_text.empty() && !drag_button &&

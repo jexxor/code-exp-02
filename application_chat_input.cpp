@@ -13,7 +13,7 @@ bool contains(const CanvasRect& bounds, Vec2 point)
 }
 } // namespace
 
-bool Application::chat_button(const XEvent& event, Vec2 pointer)
+bool Application::chat_button(const WindowEvent& event, Vec2 pointer)
 {
     if (!chat || !chat->visible || drag_button || event.xbutton.button == Button2 ||
         event.xbutton.button == Button4 || event.xbutton.button == Button5)
@@ -141,7 +141,7 @@ void Application::chat_message_action(const ChatHit& hit, Vec2 world)
     }
 }
 
-bool Application::chat_key(const XEvent& event)
+bool Application::chat_key(const WindowEvent& event)
 {
     auto key_event = event.xkey;
     const auto key = XLookupKeysym(&key_event, 0);
@@ -190,7 +190,7 @@ bool Application::chat_key(const XEvent& event)
     return true;
 }
 
-bool Application::chat_shortcut(KeySym key, unsigned state, const XEvent& event)
+bool Application::chat_shortcut(KeySym key, unsigned state, const WindowEvent& event)
 {
     auto& input = chat->input;
     const bool shift = state & ShiftMask;
@@ -257,7 +257,7 @@ bool Application::chat_shortcut(KeySym key, unsigned state, const XEvent& event)
     }
 }
 
-void Application::chat_selection(const XEvent& event)
+void Application::chat_selection(const WindowEvent& event)
 {
     if (event.type == SelectionNotify && chat && event.xselection.property != None) {
         if (const auto text = pasted_text(event))
@@ -266,7 +266,7 @@ void Application::chat_selection(const XEvent& event)
         schedule_save();
     } else if (event.type == SelectionRequest) {
         const auto& request = event.xselectionrequest;
-        XEvent response{};
+        WindowEvent response{};
         response.xselection = {
             SelectionNotify, 0,    True,        display, request.requestor, request.selection,
             request.target,  None, request.time};

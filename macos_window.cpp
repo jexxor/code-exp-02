@@ -22,7 +22,7 @@ unsigned modifiers(SDL_Keymod mod)
 
 void enqueue(Display* display, const SDL_Event& native)
 {
-    XEvent event{};
+    MacEvent event{};
     switch (native.type) {
     case SDL_EVENT_QUIT:
     case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
@@ -144,12 +144,12 @@ int XPending(Display* display)
         enqueue(display, native);
     return static_cast<int>(display->events.size());
 }
-void XNextEvent(Display* display, XEvent* event)
+void XNextEvent(Display* display, MacEvent* event)
 {
     *event = display->events.front();
     display->events.pop_front();
 }
-int XFilterEvent(XEvent*, Window) { return False; }
+int XFilterEvent(MacEvent*, Window) { return False; }
 int XGrabPointer(Display*, Window, int, unsigned, int, int, Window, Cursor, unsigned long)
 {
     return SDL_CaptureMouse(true) ? GrabSuccess : 1;
@@ -162,7 +162,7 @@ void XConvertSelection(Display* display, Atom selection, Atom target, Atom prope
     char* clipboard = SDL_GetClipboardText();
     display->property = clipboard ? clipboard : "";
     SDL_free(clipboard);
-    XEvent event{};
+    MacEvent event{};
     event.type = SelectionNotify;
     event.xselection = {SelectionNotify, 0, True, display, window, selection, target, property, time};
     display->events.push_back(event);
@@ -182,7 +182,7 @@ int XGetWindowProperty(Display* display, Window, Atom, long, long, int, Atom, At
     return Success;
 }
 int XFree(void* data) { std::free(data); return 0; }
-void XSendEvent(Display*, Window, int, long, XEvent*) {}
+void XSendEvent(Display*, Window, int, long, MacEvent*) {}
 int XTranslateCoordinates(Display*, Window window, Window, int, int, int* x, int* y,
                           Window* child)
 {

@@ -1,6 +1,6 @@
 #include "application.h"
 
-void Application::handle_event(const XEvent& event)
+void Application::handle_event(const WindowEvent& event)
 {
     if (workspace_load && event.type != Expose && event.type != ConfigureNotify &&
         event.type != ClientMessage && event.type != DestroyNotify)
@@ -64,7 +64,7 @@ void Application::handle_event(const XEvent& event)
     }
 }
 
-void Application::handle_button(const XEvent& event)
+void Application::handle_button(const WindowEvent& event)
 {
     const Vec2 pointer{static_cast<double>(event.xbutton.x), static_cast<double>(event.xbutton.y)};
     const auto view = viewport();
@@ -100,7 +100,7 @@ void Application::handle_button(const XEvent& event)
     handle_canvas_button(event, pointer, view);
 }
 
-void Application::handle_canvas_button(const XEvent& event, Vec2 pointer, const Viewport& view)
+void Application::handle_canvas_button(const WindowEvent& event, Vec2 pointer, const Viewport& view)
 {
     if (event.xbutton.button == Button1 && !(event.xbutton.state & Mod1Mask) &&
         open_document_link(pointer))
@@ -116,7 +116,7 @@ void Application::handle_canvas_button(const XEvent& event, Vec2 pointer, const 
     redraw = true;
 }
 
-bool Application::close_window_button(const XEvent& event, Vec2 pointer)
+bool Application::close_window_button(const WindowEvent& event, Vec2 pointer)
 {
     if (event.xbutton.button != Button2 || drag_button)
         return false;
@@ -153,7 +153,7 @@ void Application::zoom_wheel(unsigned button, Vec2 pointer)
                            drag_button || view.contains(pointer) ? pointer : view.center());
 }
 
-void Application::handle_motion(const XEvent& event)
+void Application::handle_motion(const WindowEvent& event)
 {
     const Vec2 pointer{static_cast<double>(event.xmotion.x), static_cast<double>(event.xmotion.y)};
     mouse_position = pointer;
@@ -210,7 +210,7 @@ void Application::update_pointer_hover(Vec2 pointer)
     hover_due = chat_at(pointer) ? Clock::time_point::max() : Clock::now() + 400ms;
 }
 
-void Application::handle_release(const XEvent& event)
+void Application::handle_release(const WindowEvent& event)
 {
     if (text_selection.dragging) {
         end_text_selection(event);
@@ -235,7 +235,7 @@ void Application::handle_release(const XEvent& event)
     update_cursor();
 }
 
-bool Application::cancel_pointer_drag(const XEvent& event)
+bool Application::cancel_pointer_drag(const WindowEvent& event)
 {
     auto key = event.xkey;
     if (XLookupKeysym(&key, 0) != XK_Escape ||
@@ -243,7 +243,7 @@ bool Application::cancel_pointer_drag(const XEvent& event)
         return false;
     text_selection.moved = true;
     drag_moved = true;
-    XEvent release{};
+    WindowEvent release{};
     release.type = ButtonRelease;
     release.xbutton.button = drag_button;
     release.xbutton.x = static_cast<int>(mouse_position.x);
@@ -252,7 +252,7 @@ bool Application::cancel_pointer_drag(const XEvent& event)
     return true;
 }
 
-void Application::handle_key(const XEvent& event)
+void Application::handle_key(const WindowEvent& event)
 {
     if (cancel_pointer_drag(event) || canvas_shortcut_key(event) || agent_window_key(event) ||
         selection_key(event) || chat_key(event) || intent_margin_key(event) ||
@@ -306,7 +306,7 @@ void Application::handle_key(const XEvent& event)
     redraw = true;
 }
 
-bool Application::popup_button(const XEvent& event, bool in_popup)
+bool Application::popup_button(const WindowEvent& event, bool in_popup)
 {
     if (in_popup && (event.xbutton.button == Button4 || event.xbutton.button == Button5)) {
         popup_scroll += event.xbutton.button == Button4 ? -60 : 60;
@@ -316,7 +316,7 @@ bool Application::popup_button(const XEvent& event, bool in_popup)
     return in_popup && event.xbutton.button == Button1;
 }
 
-void Application::begin_drag(const XEvent& event, Vec2 pointer, const Viewport& view, bool pan_only)
+void Application::begin_drag(const WindowEvent& event, Vec2 pointer, const Viewport& view, bool pan_only)
 {
     int header = -1;
     if (!pan_only && event.xbutton.button == Button1)

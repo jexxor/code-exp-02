@@ -1,6 +1,6 @@
 #include "application.h"
 
-std::optional<std::string> Application::pasted_text(const XEvent& event)
+std::optional<std::string> Application::pasted_text(const WindowEvent& event)
 {
     Atom type = None;
     int format = 0;
@@ -28,7 +28,7 @@ TextInput& Application::selected_input()
         return chat->input;
     return text_selection.range;
 }
-bool Application::begin_text_selection(const XEvent& event, Vec2 pointer)
+bool Application::begin_text_selection(const WindowEvent& event, Vec2 pointer)
 {
     if (event.xbutton.button != Button1 || drag_button ||
         (event.xbutton.state & (ControlMask | Mod1Mask)))
@@ -79,7 +79,7 @@ void Application::move_text_selection(Vec2 pointer)
     selected_input().place(text_byte_at(target, pointer), true);
     hover_due = popup_dismiss_due = Clock::time_point::max();
 }
-void Application::end_text_selection(const XEvent& event)
+void Application::end_text_selection(const WindowEvent& event)
 {
     const Vec2 pointer{static_cast<double>(event.xbutton.x), static_cast<double>(event.xbutton.y)};
     move_text_selection(pointer);
@@ -96,7 +96,7 @@ void Application::end_text_selection(const XEvent& event)
     schedule_save();
     update_cursor();
 }
-void Application::selection_click(const XEvent& event)
+void Application::selection_click(const WindowEvent& event)
 {
     const Vec2 pointer{static_cast<double>(event.xbutton.x), static_cast<double>(event.xbutton.y)};
     if (text_selection.surface == TextSurface::Source) {
@@ -126,7 +126,7 @@ std::string Application::selected_text()
     const auto [begin, end] = selected_input().selection();
     return text_selection.range.text.substr(begin, end - begin);
 }
-bool Application::selection_key(const XEvent& event)
+bool Application::selection_key(const WindowEvent& event)
 {
     auto key_event = event.xkey;
     const auto key = XLookupKeysym(&key_event, 0);

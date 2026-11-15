@@ -97,7 +97,7 @@ bool Application::go_forward()
     return navigate_view(true);
 }
 
-bool Application::navigation_key(const XEvent& event)
+bool Application::navigation_key(const WindowEvent& event)
 {
     auto key_event = event.xkey;
     const auto key = XLookupKeysym(&key_event, 0);

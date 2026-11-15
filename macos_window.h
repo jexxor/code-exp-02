@@ -83,7 +83,7 @@ struct XSelectionRequestEvent {
     Atom selection = 0, target = 0, property = 0;
     unsigned long time = 0;
 };
-struct XEvent {
+struct MacEvent {
     int type = 0;
     XKeyEvent xkey;
     XButtonEvent xbutton;
@@ -95,13 +95,14 @@ struct XEvent {
     XSelectionEvent xselection;
     XSelectionRequestEvent xselectionrequest;
 };
+using WindowEvent = MacEvent;
 struct XSizeHints {
     long flags = 0;
     int win_gravity = 0, width = 0, height = 0, x = 0, y = 0;
 };
 struct Display {
     Window window = nullptr;
-    std::deque<XEvent> events;
+    std::deque<MacEvent> events;
     std::string property;
 };
 
@@ -124,8 +125,8 @@ Atom XInternAtom(Display*, const char*, int);
 void XSetWMProtocols(Display*, Window, Atom*, int);
 void XSetWMNormalHints(Display*, Window, XSizeHints*);
 int XPending(Display*);
-void XNextEvent(Display*, XEvent*);
-int XFilterEvent(XEvent*, Window);
+void XNextEvent(Display*, MacEvent*);
+int XFilterEvent(MacEvent*, Window);
 int XGrabPointer(Display*, Window, int, unsigned, int, int, Window, Cursor, unsigned long);
 void XUngrabPointer(Display*, unsigned long);
 void XSetSelectionOwner(Display*, Atom, Window, unsigned long);
@@ -133,7 +134,7 @@ void XConvertSelection(Display*, Atom, Atom, Atom, Window, unsigned long);
 int XGetWindowProperty(Display*, Window, Atom, long, long, int, Atom, Atom*, int*,
                        unsigned long*, unsigned long*, unsigned char**);
 int XFree(void*);
-void XSendEvent(Display*, Window, int, long, XEvent*);
+void XSendEvent(Display*, Window, int, long, MacEvent*);
 int XTranslateCoordinates(Display*, Window, Window, int, int, int*, int*, Window*);
 KeySym XLookupKeysym(XKeyEvent*, int);
 int XLookupString(XKeyEvent*, char*, int, KeySym*, void*);

@@ -26,6 +26,7 @@
 #else
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
+using WindowEvent = XEvent;
 #endif
 #include <algorithm>
 #include <array>
@@ -203,8 +204,8 @@ class Application {
     void layout_connections();
     void draw_connection_markers();
     const ConnectionMarker* connection_marker_at(Vec2 pointer);
-    bool connection_marker_button(const XEvent& event, Vec2 pointer);
-    bool connection_key(const XEvent& event);
+    bool connection_marker_button(const WindowEvent& event, Vec2 pointer);
+    bool connection_key(const WindowEvent& event);
     GpuMesh connection_mesh;
     std::array<GpuMesh, 2> fold_toggle_meshes;
     GpuMesh chat_icon_mesh;
@@ -301,14 +302,14 @@ class Application {
     void draw_intent_note();
     void select_intent_at(Vec2 pointer);
     bool clear_intent_selection();
-    bool intent_margin_button(const XEvent& event, Vec2 pointer);
-    bool intent_margin_key(const XEvent& event);
+    bool intent_margin_button(const WindowEvent& event, Vec2 pointer);
+    bool intent_margin_key(const WindowEvent& event);
     void draw_intent();
     void draw_intent_controls();
-    bool intent_button(const XEvent& event, Vec2 pointer);
+    bool intent_button(const WindowEvent& event, Vec2 pointer);
     bool begin_intent_drag(Vec2 pointer, Vec2 world);
     void activate_intent_at(Vec2 pointer, Vec2 world);
-    bool intent_key(const XEvent& event);
+    bool intent_key(const WindowEvent& event);
     void intent_action(const std::string& action);
     void open_intent_conversation(const std::string& id);
     void draw_chat_card();
@@ -321,12 +322,12 @@ class Application {
                      bool cmake = false);
     void move_search(int direction);
     void open_search_match(std::size_t index);
-    bool search_key(const XEvent& event);
-    bool search_edit_key(const XEvent& event, KeySym key);
-    bool search_button(const XEvent& event, Vec2 pointer);
-    void paste_search(const XEvent& event);
-    std::optional<std::string> pasted_text(const XEvent& event);
-    bool canvas_shortcut_key(const XEvent& event);
+    bool search_key(const WindowEvent& event);
+    bool search_edit_key(const WindowEvent& event, KeySym key);
+    bool search_button(const WindowEvent& event, Vec2 pointer);
+    void paste_search(const WindowEvent& event);
+    std::optional<std::string> pasted_text(const WindowEvent& event);
+    bool canvas_shortcut_key(const WindowEvent& event);
     void show_shortcuts();
     bool shortcuts_key(KeySym key);
     bool handle_canvas_tool(const lsp::Json& message);
@@ -341,9 +342,9 @@ class Application {
     bool reopen_chat(Vec2 pointer);
     std::vector<CanvasRect> conversation_bounds() const;
     void shelve_conversations();
-    void dismiss_empty_chat(const XEvent& event, Vec2 pointer);
-    bool close_window_button(const XEvent& event, Vec2 pointer);
-    bool agent_window_key(const XEvent& event);
+    void dismiss_empty_chat(const WindowEvent& event, Vec2 pointer);
+    bool close_window_button(const WindowEvent& event, Vec2 pointer);
+    bool agent_window_key(const WindowEvent& event);
     void open_chat_input(Vec2 pointer);
     lsp::Json agent_context(Vec2 pointer);
     void refresh_agent_context();
@@ -376,12 +377,12 @@ class Application {
     void move_chat_caret(int direction, bool extend);
     void draw_chat_questions();
     void respond_chat_question(const std::string& text);
-    bool chat_button(const XEvent& event, Vec2 pointer);
+    bool chat_button(const WindowEvent& event, Vec2 pointer);
     void chat_action(const ChatHit& hit, Vec2 world);
     void chat_message_action(const ChatHit& hit, Vec2 world);
-    bool chat_key(const XEvent& event);
-    bool chat_shortcut(KeySym key, unsigned state, const XEvent& event);
-    void chat_selection(const XEvent& event);
+    bool chat_key(const WindowEvent& event);
+    bool chat_shortcut(KeySym key, unsigned state, const WindowEvent& event);
+    void chat_selection(const WindowEvent& event);
     bool chat_over_text(Vec2 pointer);
     bool open_chat_link(const DocumentView& view, Vec2 point);
     TextTarget text_at(Vec2 pointer);
@@ -391,11 +392,11 @@ class Application {
     std::size_t text_byte_at(const TextTarget& target, Vec2 pointer, bool* inside = nullptr);
     std::size_t source_byte_at(const SourcePanel& panel, Vec2 pointer);
     TextInput& selected_input();
-    bool begin_text_selection(const XEvent& event, Vec2 pointer);
+    bool begin_text_selection(const WindowEvent& event, Vec2 pointer);
     void move_text_selection(Vec2 pointer);
-    void end_text_selection(const XEvent& event);
-    void selection_click(const XEvent& event);
-    bool selection_key(const XEvent& event);
+    void end_text_selection(const WindowEvent& event);
+    void selection_click(const WindowEvent& event);
+    bool selection_key(const WindowEvent& event);
     std::string selected_text();
     void draw_selection_layout(PangoLayout* layout, Vec2 origin, double scale,
                                std::pair<std::size_t, std::size_t> range,
@@ -434,25 +435,25 @@ class Application {
     void toggle_fold(int index, int source);
     void draw();
 
-    void handle_button(const XEvent& event);
-    void handle_canvas_button(const XEvent& event, Vec2 pointer, const Viewport& view);
+    void handle_button(const WindowEvent& event);
+    void handle_canvas_button(const WindowEvent& event, Vec2 pointer, const Viewport& view);
     void zoom_wheel(unsigned button, Vec2 pointer);
-    void handle_motion(const XEvent& event);
+    void handle_motion(const WindowEvent& event);
     void handle_drag_motion(Vec2 pointer);
     void update_pointer_hover(Vec2 pointer);
     void update_cursor();
     bool over_text(Vec2 screen);
-    void handle_release(const XEvent& event);
-    void handle_key(const XEvent& event);
-    bool cancel_pointer_drag(const XEvent& event);
+    void handle_release(const WindowEvent& event);
+    void handle_key(const WindowEvent& event);
+    bool cancel_pointer_drag(const WindowEvent& event);
     void handle_message(const lsp::Message& message);
-    void handle_event(const XEvent& event);
+    void handle_event(const WindowEvent& event);
     SavedView current_view();
     Camera saved_camera(const SavedView& saved);
     void remember_view(bool continuous = false);
     void finish_view();
     bool navigate_view(bool forward);
-    bool navigation_key(const XEvent& event);
+    bool navigation_key(const WindowEvent& event);
     bool navigation_button(unsigned button);
     bool camera_key(KeySym key);
     bool go_back();
@@ -492,6 +493,6 @@ class Application {
     void language_styles(const lsp::Message& message);
     void language_hover(const lsp::Message& message);
     void language_definition(const lsp::Message& message);
-    bool popup_button(const XEvent& event, bool in_popup);
-    void begin_drag(const XEvent& event, Vec2 pointer, const Viewport& view, bool pan_only = false);
+    bool popup_button(const WindowEvent& event, bool in_popup);
+    void begin_drag(const WindowEvent& event, Vec2 pointer, const Viewport& view, bool pan_only = false);
 };

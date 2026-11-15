@@ -185,7 +185,7 @@ const ConnectionMarker* Application::connection_marker_at(Vec2 pointer)
     return nullptr;
 }
 
-bool Application::connection_marker_button(const XEvent& event, Vec2 pointer)
+bool Application::connection_marker_button(const WindowEvent& event, Vec2 pointer)
 {
     if (!drag_button && event.xbutton.button == Button1)
         for (const auto& agent : agent_markers)
@@ -205,7 +205,7 @@ bool Application::connection_marker_button(const XEvent& event, Vec2 pointer)
     return jump_to({{"uri", at.uri}, {"range", {{"start", position}, {"end", position}}}});
 }
 
-bool Application::connection_key(const XEvent& event)
+bool Application::connection_key(const WindowEvent& event)
 {
     auto key = event.xkey;
     return XLookupKeysym(&key, 0) == XK_Escape && popup_text.empty() && !drag_button &&

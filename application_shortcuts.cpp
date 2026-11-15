@@ -62,7 +62,7 @@ bool Application::shortcuts_key(KeySym key)
     }
     return true;
 }
-bool Application::canvas_shortcut_key(const XEvent& event)
+bool Application::canvas_shortcut_key(const WindowEvent& event)
 {
     if (navigation_key(event))
         return true;
