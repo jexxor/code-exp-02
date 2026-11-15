@@ -8,6 +8,7 @@ permissions:
 jobs:
   platform-core:
     strategy:
+      fail-fast: false
       matrix:
         runner: [macos-15, macos-15-intel]
     runs-on: ${{ matrix.runner }}
@@ -15,10 +16,24 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build and run the native file watcher
         run: |
-          clang++ -std=c++23 -mmacosx-version-min=14.0 -I. \
+          if ! clang++ -std=c++23 -mmacosx-version-min=14.0 -I. \
             project_watch.cpp tests/project_watch_test.cpp \
-            -framework CoreServices -o /tmp/source-canvas-project-watch-test
-          /tmp/source-canvas-project-watch-test
+            -framework CoreServices -o /tmp/source-canvas-project-watch-test \
+            > /tmp/source-canvas-watch-build.log 2>&1; then
+            cat /tmp/source-canvas-watch-build.log
+            tail -20 /tmp/source-canvas-watch-build.log | while IFS= read -r line; do
+              echo "::error title=macOS watcher build::$line"
+            done
+            exit 1
+          fi
+          if ! /tmp/source-canvas-project-watch-test \
+            > /tmp/source-canvas-watch-run.log 2>&1; then
+            cat /tmp/source-canvas-watch-run.log
+            tail -20 /tmp/source-canvas-watch-run.log | while IFS= read -r line; do
+              echo "::error title=macOS watcher test::$line"
+            done
+            exit 1
+          fi
       - name: Compile process and executable-path adapters
         run: |
           clang++ -std=c++23 -mmacosx-version-min=14.0 -I. \
