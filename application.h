@@ -21,8 +21,12 @@
 #include "text.h"
 #include "text_input.h"
 #include "viewer_config.h"
+#ifdef __APPLE__
+#include "macos_window.h"
+#else
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
+#endif
 #include <algorithm>
 #include <array>
 #include <cctype>

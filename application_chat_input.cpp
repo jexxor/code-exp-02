@@ -1,6 +1,8 @@
 #include "application.h"
+#ifndef __APPLE__
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
+#endif
 
 #include <ranges>
 
@@ -212,6 +214,9 @@ bool Application::chat_shortcut(KeySym key, unsigned state, const XEvent& event)
             clipboard_text = input.selected();
             XSetSelectionOwner(display, XInternAtom(display, "CLIPBOARD", False), window,
                                event.xkey.time);
+#ifdef __APPLE__
+            SDL_SetClipboardText(clipboard_text.c_str());
+#endif
             if (key == XK_x || key == XK_X)
                 input.insert("");
             return true;

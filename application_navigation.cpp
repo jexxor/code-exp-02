@@ -1,5 +1,7 @@
 #include "application.h"
+#ifndef __APPLE__
 #include <X11/XF86keysym.h>
+#endif
 
 namespace {
 constexpr std::size_t history_limit = 100;

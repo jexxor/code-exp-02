@@ -16,7 +16,9 @@ std::optional<std::string> Application::pasted_text(const XEvent& event)
         return std::nullopt;
     return std::string(text, count);
 }
+#ifndef __APPLE__
 #include <X11/Xatom.h>
+#endif
 
 TextInput& Application::selected_input()
 {
@@ -137,6 +139,9 @@ bool Application::selection_key(const XEvent& event)
         clipboard_text = text;
         XSetSelectionOwner(display, XInternAtom(display, "CLIPBOARD", False), window,
                            event.xkey.time);
+#ifdef __APPLE__
+        SDL_SetClipboardText(clipboard_text.c_str());
+#endif
         return true;
     }
     if ((key == XK_a || key == XK_A) && (event.xkey.state & ControlMask)) {

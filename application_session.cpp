@@ -1,5 +1,7 @@
 #include "application.h"
+#ifndef __APPLE__
 #include <X11/Xutil.h>
+#endif
 
 namespace {
 std::filesystem::path session_path(const std::string& root)

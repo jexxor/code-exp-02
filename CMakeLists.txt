@@ -4,8 +4,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 14.0 CACHE STRING "Minimum macOS version")
+    add_compile_options(-fexperimental-library)
+    add_link_options(-fexperimental-library)
+endif()
 
-find_package(X11 REQUIRED)
+if(NOT APPLE)
+    find_package(X11 REQUIRED)
+endif()
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(
     TYPOGRAPHY
@@ -20,8 +27,8 @@ pkg_check_modules(GPU REQUIRED IMPORTED_TARGET epoxy)
 find_package(nlohmann_json 3.10 REQUIRED)
 find_package(Threads REQUIRED)
 option(ENABLE_CLANG_TIDY "Enforce static analysis when compiling C++" ON)
-find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy-18 clang-tidy REQUIRED)
 if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXECUTABLE NAMES clang-tidy-18 clang-tidy REQUIRED)
     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXECUTABLE};--quiet")
 endif()
 set_property(
@@ -190,8 +197,10 @@ target_link_libraries(
     language_server PUBLIC nlohmann_json::nlohmann_json platform
 )
 target_include_directories(language_server PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-find_program(LATEX_EXECUTABLE latex REQUIRED)
-find_program(DVISVGM_EXECUTABLE dvisvgm REQUIRED)
+if(NOT APPLE)
+    find_program(LATEX_EXECUTABLE latex REQUIRED)
+    find_program(DVISVGM_EXECUTABLE dvisvgm REQUIRED)
+endif()
 add_library(source_graph source_graph.cpp)
 target_include_directories(source_graph PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(source_graph PUBLIC language_server)
@@ -264,6 +273,9 @@ target_link_libraries(
     application_core PUBLIC gpu_renderer language_server source_graph
                             project_watch agent_connection
 )
+if(APPLE)
+    target_sources(application_core PRIVATE macos_window.cpp)
+endif()
 
 add_executable(white_window main.cpp)
 target_include_directories(white_window PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")

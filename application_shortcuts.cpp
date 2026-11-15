@@ -1,5 +1,7 @@
 #include "application.h"
+#ifndef __APPLE__
 #include <X11/Xutil.h>
+#endif
 
 void Application::show_shortcuts()
 {

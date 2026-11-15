@@ -69,3 +69,27 @@ jobs:
               exit 1
             fi
           done
+      - name: Build the macOS application
+        run: |
+          brew install gdk-pixbuf clang-format
+          python3 -m venv /tmp/source-canvas-venv
+          /tmp/source-canvas-venv/bin/pip install websockets
+          if ! cmake -S . -B /tmp/source-canvas-macos-build \
+            -DPython3_EXECUTABLE=/tmp/source-canvas-venv/bin/python3 \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
+            -DENABLE_CLANG_TIDY=OFF -DFORMAT_ON_CONFIGURE=OFF -DBUILD_TESTING=OFF \
+            > /tmp/source-canvas-cmake.log 2>&1; then
+            cat /tmp/source-canvas-cmake.log
+            tail -20 /tmp/source-canvas-cmake.log | while IFS= read -r line; do
+              echo "::error title=macOS configure::$line"
+            done
+            exit 1
+          fi
+          if ! cmake --build /tmp/source-canvas-macos-build --target white_window -j2 \
+            > /tmp/source-canvas-app-build.log 2>&1; then
+            cat /tmp/source-canvas-app-build.log
+            tail -30 /tmp/source-canvas-app-build.log | while IFS= read -r line; do
+              echo "::error title=macOS application build::$line"
+            done
+            exit 1
+          fi

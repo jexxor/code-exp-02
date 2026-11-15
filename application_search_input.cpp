@@ -1,5 +1,7 @@
 #include "application.h"
+#ifndef __APPLE__
 #include <X11/Xutil.h>
+#endif
 
 namespace {
 bool contains(const CanvasRect& bounds, Vec2 point)
@@ -39,6 +41,9 @@ bool Application::search_edit_key(const XEvent& event, KeySym key)
             clipboard_text = search.query.selected();
             XSetSelectionOwner(display, XInternAtom(display, "CLIPBOARD", False), window,
                                event.xkey.time);
+#ifdef __APPLE__
+            SDL_SetClipboardText(clipboard_text.c_str());
+#endif
             if (key == XK_x)
                 search.query.insert("");
             return true;

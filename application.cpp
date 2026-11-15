@@ -1,6 +1,8 @@
 #include "application.h"
 #include "executable_path.h"
+#ifndef __APPLE__
 #include <X11/Xatom.h>
+#endif
 #include <unistd.h>
 
 namespace {
@@ -61,7 +63,11 @@ bool Application::initialize_window()
     screen = DefaultScreen(display);
 
     try {
+#ifdef __APPLE__
+        renderer = std::make_unique<GpuRenderer>();
+#else
         renderer = std::make_unique<GpuRenderer>(display, screen);
+#endif
         renderer->set_color_scheme(appearance.color_scheme);
         renderer->set_ui_scale(appearance.ui_scale);
     } catch (const std::exception& error) {
@@ -289,6 +295,10 @@ void Application::wait_for_work(Clock::time_point next_frame)
         const auto wait = std::chrono::ceil<std::chrono::milliseconds>(deadline - Clock::now());
         timeout = static_cast<int>(std::max<std::int64_t>(0, wait.count()));
     }
+#ifdef __APPLE__
+    // SDL has no pollable window descriptor; check its queue at least every 16 ms.
+    timeout = timeout < 0 ? 16 : std::min(timeout, 16);
+#endif
     std::vector<pollfd> connections = {
         {ConnectionNumber(display), POLLIN, 0},
         {wake_fd(cpp_language.server), POLLIN, 0},
