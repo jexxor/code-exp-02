@@ -82,6 +82,7 @@ jobs:
           python3 -m venv /tmp/source-canvas-venv
           /tmp/source-canvas-venv/bin/pip install websockets
           if ! cmake -S . -B /tmp/source-canvas-macos-build \
+            -DCMAKE_BUILD_TYPE=Release \
             -DPython3_EXECUTABLE=/tmp/source-canvas-venv/bin/python3 \
             -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
             -DENABLE_CLANG_TIDY=OFF -DFORMAT_ON_CONFIGURE=OFF -DBUILD_TESTING=OFF \
