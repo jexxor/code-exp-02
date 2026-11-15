@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build and run the native file watcher
         run: |
-          if ! clang++ -std=c++23 -mmacosx-version-min=14.0 -I. \
+          if ! clang++ -std=c++23 -fexperimental-library -mmacosx-version-min=14.0 -I. \
             project_watch.cpp tests/project_watch_test.cpp \
             -framework CoreServices -o /tmp/source-canvas-project-watch-test \
             > /tmp/source-canvas-watch-build.log 2>&1; then
@@ -36,8 +36,8 @@ jobs:
           fi
       - name: Compile process and executable-path adapters
         run: |
-          clang++ -std=c++23 -mmacosx-version-min=14.0 -I. \
+          clang++ -std=c++23 -fexperimental-library -mmacosx-version-min=14.0 -I. \
             -c process.cpp -o /tmp/source-canvas-process.o
           printf '#include "executable_path.h"\n#include "wakeup.h"\nint main() { WakeSignal signal; return executable_path().empty(); }\n' |
-            clang++ -std=c++23 -mmacosx-version-min=14.0 -I. \
+            clang++ -std=c++23 -fexperimental-library -mmacosx-version-min=14.0 -I. \
               -x c++ -fsyntax-only -
