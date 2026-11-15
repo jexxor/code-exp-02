@@ -88,6 +88,10 @@ jobs:
           if ! cmake --build /tmp/source-canvas-macos-build --target white_window -j2 \
             > /tmp/source-canvas-app-build.log 2>&1; then
             cat /tmp/source-canvas-app-build.log
+            grep -m 8 -B 2 -A 2 'error:' /tmp/source-canvas-app-build.log |
+              while IFS= read -r line; do
+                echo "::error title=macOS first compiler errors::$line"
+              done
             tail -30 /tmp/source-canvas-app-build.log | while IFS= read -r line; do
               echo "::error title=macOS application build::$line"
             done
