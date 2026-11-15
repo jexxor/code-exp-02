@@ -15,7 +15,8 @@ using Status = int;
 using XIM = void*;
 using XIC = void*;
 
-constexpr int False = 0, True = 1, None = 0;
+constexpr int False = 0, True = 1;
+#define None 0
 constexpr int Success = 0, GrabSuccess = 0, GrabModeAsync = 0;
 constexpr int PropModeReplace = 0, AnyPropertyType = 0, XBufferOverflow = -1;
 constexpr unsigned long CurrentTime = 0;
