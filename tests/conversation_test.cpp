@@ -85,11 +85,33 @@ void test_conversation()
         replies.size() == 1 && replies[0]["id"] == "approval" &&
             replies[0]["result"]["decision"] == "decline",
         "Actual approvals must receive the user's explicit answer, including string request IDs");
+    const Json permissions{{"network", {{"enabled", true}}},
+                           {"fileSystem", {{"write", Json::array({"/outside"})}}}};
+    model.receive({{"id", "permissions"},
+                   {"method", "item/permissions/requestApproval"},
+                   {"params", {{"permissions", permissions}}}});
+    model.answer(0, true);
+    const auto grants = model.outgoing();
+    expect(grants.size() == 1 && grants[0]["result"]["permissions"] == permissions &&
+               grants[0]["result"]["scope"] == "turn",
+           "Permission approvals must grant only the requested access for one turn");
+    model.receive({{"id", "permissions-denied"},
+                   {"method", "item/permissions/requestApproval"},
+                   {"params", {{"permissions", permissions}}}});
+    model.answer(0, false);
+    const auto denial = model.outgoing();
+    expect(denial.size() == 1 && denial[0]["result"]["permissions"] == Json::object(),
+           "Declining a permission request must grant no access");
     model.receive({{"method", "turn/completed"},
                    {"params", {{"threadId", "thread"}, {"turn", {{"status", "completed"}}}}}});
     expect(model.submit("Next change"), "An idle conversation must accept another turn");
     request = take_request(model, "turn/start");
     expect(!request["params"].contains("model"), "New turns must inherit the current model");
+    expect(request["params"]["approvalPolicy"] == "on-request" &&
+               request["params"]["sandboxPolicy"]["type"] == "workspaceWrite" &&
+               request["params"]["sandboxPolicy"]["writableRoots"] == Json::array({"/project"}) &&
+               request["params"]["sandboxPolicy"]["networkAccess"] == false,
+           "Resumed conversations must use project-scoped access on each new turn");
     model.receive({{"method", "canvas/disconnected"}, {"params", {{"message", "offline"}}}});
     expect(!model.ready && model.outgoing().empty(),
            "Reconnect must not replay an unacknowledged message");
@@ -118,9 +140,9 @@ void test_contextual_conversation()
                request["params"]["dynamicTools"][0]["name"] == "canvas_intent",
            "New agents must be told the standing decisions and be able to file their turn");
     expect(request["params"]["cwd"] == "/project", "New cards must retain the project workspace");
-    expect(request["params"]["approvalPolicy"] == "never" &&
-               request["params"]["sandbox"] == "danger-full-access",
-           "New canvas agents must start with no approval prompts and full access");
+    expect(request["params"]["approvalPolicy"] == "on-request" &&
+               request["params"]["sandbox"] == "workspace-write",
+           "New canvas agents must request approval before crossing the workspace boundary");
     const auto& tool = request["params"]["dynamicTools"][0];
     expect(tool["name"] == "canvas_intent" && tool["type"] == "function" &&
                tool["inputSchema"]["properties"].contains("intent"),

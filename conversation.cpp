@@ -272,6 +272,14 @@ void Conversation::notification(const std::string& method, const Json& params)
     }
     if (params.contains("threadId") && params["threadId"] != thread_id)
         return;
+    if (method == "serverRequest/resolved") {
+        const auto id = params.value("requestId", Json());
+        const auto before = questions.size();
+        std::erase_if(questions, [&](const AgentQuestion& question) { return question.id == id; });
+        if (questions.size() != before)
+            ++revision;
+        return;
+    }
     if (method == "item/started" || method == "item/completed")
         receive_item(method, params);
     else if (method == "item/agentMessage/delta")
@@ -320,6 +328,13 @@ void Conversation::send_prompt()
     const bool active = !active_turn.empty();
     if (active)
         params["expectedTurnId"] = active_turn;
+    else {
+        params["cwd"] = root;
+        params["approvalPolicy"] = "on-request";
+        params["sandboxPolicy"] = {{"type", "workspaceWrite"},
+                                   {"writableRoots", Json::array({root})},
+                                   {"networkAccess", false}};
+    }
     request(active ? "turn/steer" : "turn/start", std::move(params));
 }
 bool Conversation::submit(const std::string& text)
@@ -331,8 +346,8 @@ bool Conversation::submit(const std::string& text)
     submitted = text;
     if (thread_id.empty()) {
         Json start{{"cwd", root},
-                   {"approvalPolicy", "never"},
-                   {"sandbox", "danger-full-access"},
+                   {"approvalPolicy", "on-request"},
+                   {"sandbox", "workspace-write"},
                    {"dynamicTools", canvas_tools()}};
         if (!instructions.empty())
             start["developerInstructions"] = instructions;
@@ -387,6 +402,10 @@ void Conversation::answer(std::size_t index, bool accept, const std::string& tex
         for (const auto& prompt : question.params.value("questions", Json::array()))
             answers[prompt.value("id", "")] = {{"answers", Json::array({text})}};
         result = {{"answers", answers}};
+    } else if (question.method == "item/permissions/requestApproval") {
+        result = {{"permissions", accept ? question.params.value("permissions", Json::object())
+                                         : Json::object()},
+                  {"scope", "turn"}};
     }
     queued.push_back({{"id", question.id}, {"result", result}});
     questions.erase(questions.begin() + static_cast<long>(index));

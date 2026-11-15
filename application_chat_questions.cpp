@@ -42,8 +42,22 @@ void Application::draw_chat_questions()
             text = "**" + prompts[chat->question_index].value("question", "") + "**";
             options = prompts[chat->question_index].value("options", lsp::Json::array());
         }
-    } else if (request.params.contains("command") && request.params["command"].is_string())
-        text += "\n```sh\n" + request.params["command"].get<std::string>() + "\n```";
+    } else {
+        if (request.method == "item/permissions/requestApproval" &&
+            request.params.contains("permissions"))
+            text += "\nRequested permissions:\n```json\n" +
+                    request.params["permissions"].dump(2) + "\n```";
+        if (request.params.contains("networkApprovalContext") &&
+            request.params["networkApprovalContext"].is_object()) {
+            const auto& network = request.params["networkApprovalContext"];
+            text += "\nNetwork: " + network.value("protocol", "") + "://" +
+                    network.value("host", "");
+        }
+        if (request.params.contains("grantRoot") && request.params["grantRoot"].is_string())
+            text += "\nAccess to: " + request.params["grantRoot"].get<std::string>();
+        if (request.params.contains("command") && request.params["command"].is_string())
+            text += "\n```sh\n" + request.params["command"].get<std::string>() + "\n```";
+    }
     auto& document = chat->messages["__question"];
     update_document(document, text, static_cast<int>(chat->body.size.x - 24));
     const double controls = user_input ? options.size() * 30.0 + 8 : 40;

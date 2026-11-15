@@ -128,8 +128,7 @@ Use `"theme": "system"` to follow the desktop's light or dark preference. The ba
 
 The agent bridge expects an authenticated local Codex installation available as `codex` on `PATH` or in `~/.local/bin`. Set `SOURCE_CANVAS_CODEX` to use an explicit executable path. It reuses a running app-server daemon when available and otherwise starts a server over standard input/output. See [`tools/agent_bridge.py`](tools/agent_bridge.py) for the transport.
 
-New canvas threads currently run with full filesystem access and no approval prompts.
-
+Canvas agents can edit the current project without prompts. They ask before writing elsewhere or using the network; approvals grant only the requested access for the current turn. Existing conversations receive the same limits on their next turn. Files outside the project remain readable so language servers can resolve library code.
 
 Agents file each turn against your decisions through a `canvas_intent` tool. It is registered when a thread is created and retained when that thread resumes, using the [Codex app-server dynamic tool protocol](https://learn.chatgpt.com/docs/app-server#dynamic-tool-calls-experimental).
 
