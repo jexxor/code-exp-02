@@ -20,6 +20,7 @@
 #include <set>
 #include <stdexcept>
 #include <sys/socket.h>
+#include <stop_token>
 #include <thread>
 #include <unistd.h>
 

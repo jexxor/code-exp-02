@@ -10,6 +10,7 @@
 #include <poll.h>
 #include <stdexcept>
 #include <sys/socket.h>
+#include <stop_token>
 #include <thread>
 
 using namespace std::chrono_literals;

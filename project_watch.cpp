@@ -23,6 +23,7 @@
 #else
 #include <sys/inotify.h>
 #endif
+#include <stop_token>
 #include <thread>
 #include <unistd.h>
 

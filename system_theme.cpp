@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <gio/gio.h>
 #include <mutex>
+#include <stop_token>
 #include <thread>
 #include <utility>
 
