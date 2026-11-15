@@ -69,6 +69,13 @@ jobs:
               exit 1
             fi
           done
+      - name: Check macOS input event translation
+        run: |
+          clang++ -std=c++23 -fexperimental-library -mmacosx-version-min=14.0 \
+            -I. $(pkg-config --cflags sdl3) \
+            macos_window.cpp tests/macos_window_test.cpp \
+            $(pkg-config --libs sdl3) -o /tmp/source-canvas-window-test
+          SDL_VIDEODRIVER=dummy /tmp/source-canvas-window-test
       - name: Build the macOS application
         run: |
           brew install gdk-pixbuf clang-format
