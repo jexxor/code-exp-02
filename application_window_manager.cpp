@@ -29,7 +29,11 @@ void Application::draw_window_title(DocumentView& title, const std::string& text
         pango_layout_set_ellipsize(title.layout.get(), PANGO_ELLIPSIZE_END);
         int measured = 0;
         pango_layout_get_pixel_size(title.layout.get(), &measured, nullptr);
+#ifdef __APPLE__
         title.size = {static_cast<double>(measured + 58), 27};
+#else
+        title.size = {static_cast<double>(measured + 34), 27};
+#endif
         renderer->upload(title.mesh, {{title.layout.get(), {32, 0}}});
     }
     hit = {};

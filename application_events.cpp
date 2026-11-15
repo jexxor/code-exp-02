@@ -118,12 +118,15 @@ void Application::handle_canvas_button(const WindowEvent& event, Vec2 pointer, c
 
 bool Application::close_window_button(const WindowEvent& event, Vec2 pointer)
 {
-    const auto* target = event.xbutton.button == Button1 ? chat_at(pointer) : nullptr;
-    if (target && !drag_button && CanvasWindowManager::contains(target->close_bounds, pointer) &&
+#ifdef __APPLE__
+    const auto* chat_target = event.xbutton.button == Button1 ? chat_at(pointer) : nullptr;
+    if (chat_target && !drag_button &&
+        CanvasWindowManager::contains(chat_target->close_bounds, pointer) &&
         activate_chat(pointer)) {
         close_agent_window();
         return true;
     }
+#endif
     if (event.xbutton.button != Button2 || drag_button)
         return false;
     auto contains = [](const CanvasRect& bounds, Vec2 point) {

@@ -2,8 +2,10 @@
 
 void Application::draw_chat_card()
 {
+#ifdef __APPLE__
     if (chat)
         chat->close_bounds = {};
+#endif
     if (!chat || !chat->visible)
         return;
     if (chat->composing)
@@ -42,7 +44,9 @@ void Application::draw_chat_card()
             renderer->draw(chat->status.mesh, camera.world_to_screen(point, viewport()),
                            camera.zoom);
         }
+#ifdef __APPLE__
         draw_chat_close({{origin.x + bounds.size.x - 28, origin.y + 4}, {24, 24}});
+#endif
         return;
     }
     chat->hits.push_back({ChatHit::Kind::Title, {chat->bounds.origin, {chat->bounds.size.x, 48}}});
@@ -64,9 +68,12 @@ void Application::draw_chat_card()
         drag_chat_scroll(camera.screen_to_world(mouse_position, viewport()));
     draw_chat_messages();
     draw_chat_controls();
+#ifdef __APPLE__
     draw_chat_close({{origin.x + bounds.size.x - 28, origin.y + 4}, {24, 24}});
+#endif
 }
 
+#ifdef __APPLE__
 void Application::draw_chat_close(CanvasRect bounds)
 {
     if (!chat_close_mesh.buffer) {
@@ -78,6 +85,7 @@ void Application::draw_chat_close(CanvasRect bounds)
     chat->close_bounds = bounds;
     renderer->draw(chat_close_mesh, bounds.origin, 1);
 }
+#endif
 
 void Application::draw_chat_chrome()
 {
@@ -120,8 +128,10 @@ void Application::draw_chat_header(std::vector<CanvasRect>& occupied)
                          {{{7, 12}, {14, 12}}, blue, 2, false}});
     }
     renderer->draw(chat_icon_mesh, bounds.origin, scale);
+#ifdef __APPLE__
     if (!chat->visible)
         draw_chat_close({{bounds.origin.x + bounds.size.x - 24, bounds.origin.y}, {24, 24}});
+#endif
 }
 
 void Application::draw_chat_messages()

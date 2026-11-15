@@ -25,7 +25,11 @@ void Application::show_shortcuts()
         "`Right-click / Ctrl+Shift+A`\tstart a conversation here\n"
         "`Tab / Ctrl+L`\tfocus the active conversation\n"
         "`Enter / Shift+Enter`\tsend / newline\n"
+#ifdef __APPLE__
         "Click × to close a conversation to its title, then × again to remove it; click the title to reopen.\n\n"
+#else
+        "A closed conversation stays as its title: click to reopen, middle-click to remove.\n\n"
+#endif
         "## Text\n"
         "Drag to select; Shift+click extends.\n"
         "`Ctrl+A / Ctrl+C / Ctrl+X / Ctrl+V`\tselect all / copy / cut / paste\n"

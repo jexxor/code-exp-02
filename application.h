@@ -210,7 +210,9 @@ class Application {
     GpuMesh connection_mesh;
     std::array<GpuMesh, 2> fold_toggle_meshes;
     GpuMesh chat_icon_mesh;
+#ifdef __APPLE__
     GpuMesh chat_close_mesh;
+#endif
     std::vector<CanvasRect> header_hits;
     std::vector<FolderRegion> regions;
     std::map<std::string, DocumentView> overview_labels;
@@ -371,7 +373,9 @@ class Application {
     void draw_chat_working(double y);
     void draw_chat_chrome();
     void draw_chat_header(std::vector<CanvasRect>& occupied);
+#ifdef __APPLE__
     void draw_chat_close(CanvasRect bounds);
+#endif
     void draw_chat_controls();
     void draw_chat_scrollbar();
     void begin_chat_scroll(Vec2 world);
