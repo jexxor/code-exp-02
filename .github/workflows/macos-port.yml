@@ -1,0 +1,28 @@
+name: macOS port
+on:
+  push:
+    branches: [macos-support]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  platform-core:
+    strategy:
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build and run the native file watcher
+        run: |
+          clang++ -std=c++23 -mmacosx-version-min=14.0 -I. \
+            project_watch.cpp tests/project_watch_test.cpp \
+            -framework CoreServices -o /tmp/source-canvas-project-watch-test
+          /tmp/source-canvas-project-watch-test
+      - name: Compile process and executable-path adapters
+        run: |
+          clang++ -std=c++23 -mmacosx-version-min=14.0 -I. \
+            -c process.cpp -o /tmp/source-canvas-process.o
+          printf '#include "executable_path.h"\n#include "wakeup.h"\nint main() { WakeSignal signal; return executable_path().empty(); }\n' |
+            clang++ -std=c++23 -mmacosx-version-min=14.0 -I. \
+              -x c++ -fsyntax-only -
