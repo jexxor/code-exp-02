@@ -4,6 +4,7 @@
 
 namespace {
 constexpr double note_width = 380;
+constexpr double readable_zoom = 0.35;
 
 std::string shell_quote(const std::string& text)
 {
