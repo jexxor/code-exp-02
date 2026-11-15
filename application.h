@@ -97,6 +97,7 @@ class Application {
         std::future<WorkspaceLayout> layout;
     };
     std::optional<WorkspaceLoad> workspace_load;
+    DocumentView workspace_progress;
     int screen = 0;
     std::unique_ptr<ChatCanvas> chat;
     std::vector<std::unique_ptr<ChatCanvas>> chat_windows;

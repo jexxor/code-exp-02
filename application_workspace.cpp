@@ -264,6 +264,23 @@ void Application::draw_workspace_preview(const Viewport& view)
     }
     draw_files(view);
     draw_headers(view);
+    const CanvasRect status{{20, height - 76.0}, {252, 56}};
+    renderer->rectangle(status, {1, 1, 1, 0.94f});
+    std::string label = "Scanning project";
+    double fraction = 0;
+    if (load.layout.valid()) {
+        label = "Arranging canvas";
+        fraction = 1;
+    } else if (!load.reading.valid() && !load.files.empty()) {
+        label = std::format("Loading {}/{}", load.next, load.files.size());
+        fraction = static_cast<double>(load.next) / load.files.size();
+    }
+    search_line(workspace_progress, label, 228, false);
+    renderer->draw(workspace_progress.mesh, {status.origin.x + 12, status.origin.y + 8}, 1);
+    renderer->rectangle({{status.origin.x + 12, status.origin.y + 42}, {228, 4}},
+                        {0.82f, 0.85f, 0.89f, 1});
+    renderer->rectangle({{status.origin.x + 12, status.origin.y + 42}, {228 * fraction, 4}},
+                        {0.25f, 0.42f, 0.68f, 1});
     renderer->present();
 }
 
