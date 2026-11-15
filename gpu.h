@@ -22,6 +22,13 @@ struct GpuMesh {
     unsigned texture = 0;
 };
 
+#ifdef __APPLE__
+struct GpuRect {
+    CanvasRect bounds;
+    std::array<float, 4> color;
+};
+#endif
+
 struct GpuImage {
     float u0 = 0, v0 = 0, u1 = 0, v1 = 0;
     bool monochrome = false;
@@ -67,6 +74,9 @@ class GpuRenderer {
     void begin(int width, int height);
     void draw(const GpuMesh& mesh, Vec2 screen_origin, double zoom);
     void rectangle(CanvasRect screen_bounds, std::array<float, 4> color);
+#ifdef __APPLE__
+    void rectangles(GpuMesh& mesh, const std::vector<GpuRect>& rectangles);
+#endif
     void clip(CanvasRect screen_bounds, int viewport_height);
     void clear_clip();
     void present();

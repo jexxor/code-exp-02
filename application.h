@@ -107,6 +107,10 @@ class Application {
     std::unique_ptr<ChatCanvas> chat;
     std::vector<std::unique_ptr<ChatCanvas>> chat_windows;
     IntentMargin intent_margin;
+#ifdef __APPLE__
+    GpuMesh intent_rect_mesh;
+    std::vector<GpuRect> intent_rectangles;
+#endif
     std::vector<std::future<void>> intent_writes;
     std::unique_ptr<SystemTheme> system_theme;
     XIM input_method = nullptr;
@@ -301,6 +305,7 @@ class Application {
     std::optional<SourceHit> source_line_at(Vec2 screen);
     CanvasRect intent_run_bounds(const SourcePanel& panel, const IntentRun& run);
     void draw_intent_run(const SourcePanel& panel, const IntentRun& run);
+    void draw_intent_rectangle(CanvasRect bounds, std::array<float, 4> color);
     void draw_intent_margin(const Viewport& view);
     void draw_intent_note();
     void select_intent_at(Vec2 pointer);

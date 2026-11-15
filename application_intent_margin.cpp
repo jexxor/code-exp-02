@@ -103,7 +103,7 @@ void Application::draw_intent_run(const SourcePanel& panel, const IntentRun& run
     const bool lit = !selected.empty() && intent == selected;
     if (lit) {
         const auto tint = intent_color(intent, camera.zoom < readable_zoom ? 0.55 : 0.9);
-        renderer->rectangle(bounds, {tint[0], tint[1], tint[2], 1});
+        draw_intent_rectangle(bounds, {tint[0], tint[1], tint[2], 1});
     }
     if (bounds.size.y < 1.5 && !lit)
         return;
@@ -111,14 +111,26 @@ void Application::draw_intent_run(const SourcePanel& panel, const IntentRun& run
         intent.empty() ? std::array<float, 3>{0.55f, 0.57f, 0.6f} : intent_color(intent, 0.5);
     const float strength = selected.empty() || lit ? 1.0f : 0.25f;
     const double inset = std::min(1.0, bounds.size.y / 4);
-    renderer->rectangle(
+    draw_intent_rectangle(
         {{bounds.origin.x + 8 * camera.zoom, bounds.origin.y + inset},
          {std::max(2.0, 4 * camera.zoom), std::max(1.0, bounds.size.y - 2 * inset)}},
         {color[0], color[1], color[2], strength});
 }
 
+void Application::draw_intent_rectangle(CanvasRect bounds, std::array<float, 4> color)
+{
+#ifdef __APPLE__
+    intent_rectangles.push_back({bounds, color});
+#else
+    renderer->rectangle(bounds, color);
+#endif
+}
+
 void Application::draw_intent_margin(const Viewport& view)
 {
+#ifdef __APPLE__
+    intent_rectangles.clear();
+#endif
     const auto& files = intent_margin.view.files;
     const CanvasRect visible{camera.screen_to_world({view.x, view.y}, view),
                              {view.width / camera.zoom, view.height / camera.zoom}};
@@ -129,6 +141,10 @@ void Application::draw_intent_margin(const Viewport& view)
         for (const auto& run : runs->second)
             draw_intent_run(panel, run);
     }
+#ifdef __APPLE__
+    // Apple OpenGL stalls when each intent updates the shared rectangle buffer.
+    renderer->rectangles(intent_rect_mesh, intent_rectangles);
+#endif
 }
 
 void Application::draw_intent_note()

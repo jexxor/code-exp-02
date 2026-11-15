@@ -711,6 +711,29 @@ void GpuRenderer::rectangle(CanvasRect bounds, std::array<float, 4> color)
     glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
     draw({impl->scratch, 6}, {0, 0}, 1);
 }
+
+#ifdef __APPLE__
+void GpuRenderer::rectangles(GpuMesh& mesh, const std::vector<GpuRect>& rectangles)
+{
+    if (rectangles.empty()) {
+        mesh.vertices = 0;
+        return;
+    }
+    std::vector<Vertex> vertices;
+    vertices.reserve(rectangles.size() * 6);
+    for (const auto& rectangle : rectangles)
+        quad(vertices, rectangle.bounds, {}, rectangle.color, 0);
+    if (!mesh.buffer) {
+        glGenBuffers(1, &mesh.buffer);
+        impl->buffers.insert(mesh.buffer);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.buffer);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(),
+                 GL_STREAM_DRAW);
+    mesh.vertices = static_cast<int>(vertices.size());
+    draw(mesh, {0, 0}, 1);
+}
+#endif
 void GpuRenderer::clip(CanvasRect bounds, int viewport_height)
 {
     glEnable(GL_SCISSOR_TEST);
