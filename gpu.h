@@ -3,7 +3,11 @@
 #include "appearance.h"
 #include "canvas.h"
 
+#ifdef __APPLE__
+#include <SDL3/SDL.h>
+#else
 #include <X11/Xlib.h>
+#endif
 #include <cairo.h>
 #include <pango/pango.h>
 
@@ -42,9 +46,14 @@ struct GpuPath {
 
 class GpuRenderer {
   public:
+#ifdef __APPLE__
+    GpuRenderer();
+    SDL_Window* window() const;
+#else
     GpuRenderer(Display* display, int screen);
-    ~GpuRenderer();
     Window window() const;
+#endif
+    ~GpuRenderer();
     std::string device() const;
     GpuImage image(cairo_surface_t* surface);
     void upload(GpuMesh& mesh, const std::vector<PlacedText>& text,

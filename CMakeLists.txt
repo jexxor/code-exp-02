@@ -198,9 +198,14 @@ target_link_libraries(source_graph PUBLIC language_server)
 
 add_library(gpu_renderer gpu.cpp)
 target_include_directories(gpu_renderer PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(
-    gpu_renderer PUBLIC X11::X11 PkgConfig::TYPOGRAPHY PkgConfig::GPU
-)
+target_link_libraries(gpu_renderer PUBLIC PkgConfig::TYPOGRAPHY PkgConfig::GPU)
+if(APPLE)
+    pkg_check_modules(SDL3 REQUIRED IMPORTED_TARGET sdl3)
+    find_package(OpenGL REQUIRED)
+    target_link_libraries(gpu_renderer PUBLIC PkgConfig::SDL3 OpenGL::GL)
+else()
+    target_link_libraries(gpu_renderer PUBLIC X11::X11)
+endif()
 
 add_library(
     application_core

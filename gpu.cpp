@@ -3,7 +3,9 @@
 #include "handles.h"
 
 #include <epoxy/gl.h>
+#ifndef __APPLE__
 #include <epoxy/glx.h>
+#endif
 #include <pango/pangocairo.h>
 
 #include <algorithm>
@@ -122,10 +124,16 @@ struct GpuRenderer::Impl {
     bool dark_theme = false;
     ColorScheme color_scheme = ColorScheme::System;
     double ui_scale = 1.0;
+#ifdef __APPLE__
+    SDL_Window* window = nullptr;
+    SDL_GLContext context = nullptr;
+    bool video_initialized = false;
+#else
     Display* display = nullptr;
     Window window = 0;
     Colormap colormap = 0;
     GLXContext context = nullptr;
+#endif
     bool owns_window = true;
     GLuint program = 0, vao = 0, atlas = 0, images = 0, scratch = 0;
     GLint screen_uniform = 0, origin_uniform = 0, zoom_uniform = 0;
@@ -139,8 +147,31 @@ struct GpuRenderer::Impl {
     };
     std::map<std::pair<cairo_scaled_font_t*, unsigned long>, Glyph> glyphs;
 
-    void initialize(Display* connection, int screen)
+    void initialize(
+#ifndef __APPLE__
+        Display* connection, int screen
+#endif
+    )
     {
+#ifdef __APPLE__
+        if (!SDL_InitSubSystem(SDL_INIT_VIDEO))
+            throw std::runtime_error(std::string("Could not initialize video: ") + SDL_GetError());
+        video_initialized = true;
+        if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4) ||
+            !SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1) ||
+            !SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) ||
+            !SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1))
+            throw std::runtime_error(std::string("Could not configure OpenGL: ") + SDL_GetError());
+        window = SDL_CreateWindow("Source Canvas", 800, 600,
+                                  SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE |
+                                      SDL_WINDOW_HIGH_PIXEL_DENSITY);
+        if (!window)
+            throw std::runtime_error(std::string("Could not create window: ") + SDL_GetError());
+        context = SDL_GL_CreateContext(window);
+        if (!context)
+            throw std::runtime_error(std::string("Could not create OpenGL context: ") + SDL_GetError());
+        SDL_GL_SetSwapInterval(1);
+#else
         display = connection;
         std::array<int, 9> attributes{
             GLX_RGBA, GLX_DOUBLEBUFFER, GLX_RED_SIZE, 8, GLX_GREEN_SIZE, 8, GLX_BLUE_SIZE, 8, None};
@@ -158,10 +189,11 @@ struct GpuRenderer::Impl {
         context = glXCreateContext(display, visual.get(), nullptr, True);
         if (!context || !glXMakeCurrent(display, window, context))
             throw std::runtime_error("Could not create an OpenGL context");
-        if (epoxy_gl_version() < 33)
-            throw std::runtime_error("OpenGL 3.3 or newer is required");
         if (epoxy_has_glx_extension(display, screen, "GLX_EXT_swap_control"))
             glXSwapIntervalEXT(display, window, 1);
+#endif
+        if (epoxy_gl_version() < 33)
+            throw std::runtime_error("OpenGL 3.3 or newer is required");
 
         const char* vertex_source = R"GLSL(#version 330 core
 layout(location=0) in vec2 position;
@@ -438,27 +470,50 @@ void main() {
             for (const auto texture : image_textures)
                 glDeleteTextures(1, &texture);
             glDeleteProgram(program);
+#ifdef __APPLE__
+            SDL_GL_MakeCurrent(window, nullptr);
+            SDL_GL_DestroyContext(context);
+#else
             glXMakeCurrent(display, None, nullptr);
             glXDestroyContext(display, context);
+#endif
         }
         for (auto* font : fonts)
             cairo_scaled_font_destroy(font);
+#ifdef __APPLE__
+        if (window && owns_window)
+            SDL_DestroyWindow(window);
+        if (video_initialized)
+            SDL_QuitSubSystem(SDL_INIT_VIDEO);
+#else
         if (window && owns_window)
             XDestroyWindow(display, window);
         if (colormap)
             XFreeColormap(display, colormap);
+#endif
     }
 };
 
+#ifdef __APPLE__
+GpuRenderer::GpuRenderer() : impl(std::make_unique<Impl>())
+{
+    impl->initialize();
+}
+SDL_Window* GpuRenderer::window() const
+{
+    return impl->window;
+}
+#else
 GpuRenderer::GpuRenderer(Display* display, int screen) : impl(std::make_unique<Impl>())
 {
     impl->initialize(display, screen);
 }
-GpuRenderer::~GpuRenderer() = default;
 Window GpuRenderer::window() const
 {
     return impl->window;
 }
+#endif
+GpuRenderer::~GpuRenderer() = default;
 std::string GpuRenderer::device() const
 {
     return reinterpret_cast<const char*>(glGetString(GL_RENDERER));
@@ -675,7 +730,11 @@ void GpuRenderer::clear_clip()
 
 void GpuRenderer::present()
 {
+#ifdef __APPLE__
+    SDL_GL_SwapWindow(impl->window);
+#else
     glXSwapBuffers(impl->display, impl->window);
+#endif
 }
 void GpuRenderer::finish()
 {

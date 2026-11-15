@@ -41,3 +41,16 @@ jobs:
           printf '#include "executable_path.h"\n#include "wakeup.h"\nint main() { WakeSignal signal; return executable_path().empty(); }\n' |
             clang++ -std=c++23 -fexperimental-library -mmacosx-version-min=14.0 -I. \
               -x c++ -fsyntax-only -
+      - name: Compile the native OpenGL renderer
+        run: |
+          brew install sdl3 libepoxy pango
+          if ! clang++ -std=c++23 -fexperimental-library -mmacosx-version-min=14.0 \
+            -I. $(pkg-config --cflags sdl3 epoxy pangocairo) \
+            -c gpu.cpp -o /tmp/source-canvas-gpu.o \
+            > /tmp/source-canvas-gpu-build.log 2>&1; then
+            cat /tmp/source-canvas-gpu-build.log
+            tail -20 /tmp/source-canvas-gpu-build.log | while IFS= read -r line; do
+              echo "::error title=macOS renderer build::$line"
+            done
+            exit 1
+          fi
