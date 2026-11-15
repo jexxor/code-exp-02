@@ -312,7 +312,11 @@ void Application::open_directory_picker()
     if (directory_picker)
         return;
     try {
+#ifdef __APPLE__
+        directory_picker = std::make_unique<DirectoryPicker>(workspace_root, 0);
+#else
         directory_picker = std::make_unique<DirectoryPicker>(workspace_root, window);
+#endif
     } catch (const std::exception& error) {
         show_popup(error.what(), viewport().center(), true);
     }
