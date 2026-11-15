@@ -2,6 +2,8 @@
 
 void Application::draw_chat_card()
 {
+    if (chat)
+        chat->close_bounds = {};
     if (!chat || !chat->visible)
         return;
     if (chat->composing)
@@ -40,6 +42,7 @@ void Application::draw_chat_card()
             renderer->draw(chat->status.mesh, camera.world_to_screen(point, viewport()),
                            camera.zoom);
         }
+        draw_chat_close({{origin.x + bounds.size.x - 28, origin.y + 4}, {24, 24}});
         return;
     }
     chat->hits.push_back({ChatHit::Kind::Title, {chat->bounds.origin, {chat->bounds.size.x, 48}}});
@@ -61,6 +64,19 @@ void Application::draw_chat_card()
         drag_chat_scroll(camera.screen_to_world(mouse_position, viewport()));
     draw_chat_messages();
     draw_chat_controls();
+    draw_chat_close({{origin.x + bounds.size.x - 28, origin.y + 4}, {24, 24}});
+}
+
+void Application::draw_chat_close(CanvasRect bounds)
+{
+    if (!chat_close_mesh.buffer) {
+        const std::array<float, 4> color{0.35f, 0.38f, 0.42f, 1};
+        renderer->paths(chat_close_mesh,
+                        {{{{7, 7}, {17, 17}}, color, 2, false},
+                         {{{17, 7}, {7, 17}}, color, 2, false}});
+    }
+    chat->close_bounds = bounds;
+    renderer->draw(chat_close_mesh, bounds.origin, 1);
 }
 
 void Application::draw_chat_chrome()
@@ -104,6 +120,8 @@ void Application::draw_chat_header(std::vector<CanvasRect>& occupied)
                          {{{7, 12}, {14, 12}}, blue, 2, false}});
     }
     renderer->draw(chat_icon_mesh, bounds.origin, scale);
+    if (!chat->visible)
+        draw_chat_close({{bounds.origin.x + bounds.size.x - 24, bounds.origin.y}, {24, 24}});
 }
 
 void Application::draw_chat_messages()

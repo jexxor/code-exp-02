@@ -175,7 +175,7 @@ Start with **`/`** to find a file, **`F`** to see the whole canvas, and **`F1`**
 | Camera back / forward | `Alt+Left` / `Alt+Right` |
 | Collapse or expand blocks | `C` / `Shift+C` |
 | Open a contextual conversation | Right-click or `Ctrl+Shift+A` |
-| Close a conversation to its title / reopen / remove | Middle-click / click the title / middle-click the title |
+| Close a conversation to its title / reopen / remove | `×` / click the title / `×` again |
 | Close a note, search, or popup | Middle-click it |
 | Focus the active conversation / send / insert newline | `Tab` or `Ctrl+L` / `Enter` / `Shift+Enter` |
 | Read the intent behind a line / clear | `I`, `Alt+click` or click the gutter bar / `Esc` |

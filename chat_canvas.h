@@ -25,6 +25,7 @@ struct ChatCanvas {
     CanvasRect bounds{{0, 0}, {760, 900}};
     CanvasRect body{}, editor{};
     CanvasRect header_bounds{}; // Screen space; labels stay readable when zoomed out.
+    CanvasRect close_bounds{}; // Screen space, including when the card is collapsed.
     std::map<std::string, DocumentView> messages;
     DocumentView header, composer, actions, status, context_preview;
     std::vector<ChatHit> hits;
