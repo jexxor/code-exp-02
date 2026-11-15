@@ -24,7 +24,7 @@
 
 ---
 
-Source Canvas is an experimental native Linux workspace that turns a source tree into a zoomable canvas. Files become movable cards, dependencies become visible connections, and agent conversations live next to the code they discuss. A separate intent view connects human decisions to Git changes and line history.
+Source Canvas is an experimental native workspace that turns a source tree into a zoomable canvas. Files become movable cards, dependencies become visible connections, and agent conversations live next to the code they discuss. A separate intent view connects human decisions to Git changes and line history. The macOS 14+ port builds on Apple Silicon and Intel, but its interactive UI still needs testing on a Mac.
 
 Image files appear as preview cards alongside source. PNG, JPEG, SVG, GIF, BMP, TIFF, ICO and WebP extensions are recognized; decoding depends on installed GdkPixbuf loaders. Previews preserve transparency and aspect ratio, fit within 640 canvas units, and reload when edited. Animated images show a still frame. Invalid or unsupported images show an error card.
 
@@ -63,7 +63,7 @@ Press `/` to search file names and source text. Results update as you type; use 
 
 ## Get running
 
-The current target is **Linux with an X11 display and OpenGL 3.3 or newer**. Mesa software rendering also works for headless checks. Build with a C++23 compiler (GCC 13 or newer) and CMake 3.20 or newer.
+The established target is **Linux with an X11 display and OpenGL 3.3 or newer**. Mesa software rendering also works for headless checks. Build with a C++23 compiler (GCC 13 or newer) and CMake 3.20 or newer.
 
 ### 1. Clone the project
 
@@ -106,6 +106,24 @@ Press **Ctrl+O** to choose a project directory in a native folder picker (provid
 Bundled fonts are copied into `build/`; keep them beside the executable. Each project keeps its own session and decisions.
 
 For Go language features, install [`gopls`](https://go.dev/gopls/) with `go install golang.org/x/tools/gopls@latest`. The build finds it on `PATH` or in the usual Go binary directory; if you install it later, add that directory to `PATH` before launching the viewer. Go files remain browsable without it.
+
+### Experimental macOS build
+
+On macOS 14 or newer, install Xcode and the build dependencies with Homebrew. The same build is checked in CI on Apple Silicon and Intel:
+
+```bash
+brew install cmake pkgconf sdl3 libepoxy pango gdk-pixbuf nlohmann-json clang-format
+python3 -m venv .venv
+.venv/bin/pip install websockets
+cmake -S . -B build-macos -DCMAKE_BUILD_TYPE=Release \
+  -DPython3_EXECUTABLE="$PWD/.venv/bin/python3" \
+  -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
+  -DENABLE_CLANG_TIDY=OFF -DFORMAT_ON_CONFIGURE=OFF -DBUILD_TESTING=OFF
+cmake --build build-macos --target white_window --parallel 2
+open build-macos/white_window.app
+```
+
+Pass a project with `open build-macos/white_window.app --args /path/to/project`. The bundle contains its fonts and agent scripts, but still loads Homebrew libraries from the build Mac. It is an experimental build, not yet a standalone release. See [macOS port status](docs/macos-feasibility.md).
 
 ### Appearance
 
@@ -183,7 +201,7 @@ Session state normally lives in `.cache/canvas-session.json` and preserves the c
 
 ## Under the hood
 
-The interface is built directly on X11 and OpenGL. Pango/Cairo shape text, an OpenGL renderer draws the canvas, and files are laid out by folder, each folder a region of the canvas, and stay where they are until you arrange them again. Every file has its place from the first frame: where it was last time, or on a first open where its line and column counts say it will fit; contents fill in behind without rearranging. Language servers and the agent bridge communicate asynchronously with the application.
+The Linux window and input use X11; the macOS prototype uses SDL3. Both share Pango/Cairo text shaping and OpenGL canvas drawing. Files are laid out by folder, each folder a region of the canvas, and stay where they are until you arrange them again. Every file has its place from the first frame: where it was last time, or on a first open where its line and column counts say it will fit; contents fill in behind without rearranging. Language servers and the agent bridge communicate asynchronously with the application.
 
 | Area | Start reading here |
 | --- | --- |

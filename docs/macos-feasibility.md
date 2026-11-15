@@ -1,17 +1,14 @@
-# macOS feasibility (15 November 2026)
+# macOS port status (15 November 2026)
 
-**Verdict:** a native macOS build is feasible, but this checkout is Linux/X11-only. This is a platform port, not a packaging or CMake switch. No macOS build or runtime check has been performed.
+The experimental branch `macos-support` builds a native `.app` for macOS 14+ on Apple Silicon and Intel. CI compiles the complete application, checks the bundle's plist, fonts, and agent scripts, and exercises keyboard, mouse, scroll, and clipboard translation with a headless SDL window. The interactive UI has not yet been run on a Mac with a display.
 
-| Area | Current dependency | Porting work |
-| --- | --- | --- |
-| Window and input | `CMakeLists.txt` requires X11; `application.h`, `application.cpp`, `application_events.cpp` and input handlers pass Xlib types, keysyms, clipboard events, cursors and XIM through the UI. | Introduce platform-neutral window, input, clipboard and text-composition events; implement a macOS backend with AppKit. This is the largest change because Xlib types appear in many handlers and tests. |
-| Rendering | `gpu.cpp` creates a GLX window/context and requires OpenGL 3.3 with GLSL 330 shaders. | Replace GLX context/window creation and buffer swap with a macOS context. Existing OpenGL drawing code and shaders are plausible for a first port: Apple documents OpenGL 4.1 support on Apple silicon. OpenGL is deprecated, so a later Metal renderer may be needed for long-term maintenance. [Apple: OpenGL on Apple silicon](https://developer.apple.com/videos/play/wwdc2020/10631/). |
-| File changes and wakeups | `project_watch.cpp` uses Linux `inotify`; `wakeup.h` uses Linux `eventfd`. `application.cpp` polls these and the X connection together. | Use FSEvents or `kqueue` for watching, a pipe or socket pair for wakeups, and connect native UI events to the existing work loop. |
-| Desktop integration | `main.cpp` and `application.cpp` use `/proc/self/exe`; `directory_picker.cpp` launches `zenity`; `application_file_links.cpp` launches `xdg-open`; `system_theme.cpp` reads Linux desktop settings. | Add macOS executable-path lookup, native folder picker, URL opener and system appearance. Keep explicit theme/font settings working. |
-| Build and distribution | CMake unconditionally finds X11, epoxy, `clang-tidy`, LaTeX and `dvisvgm`; the project uses C++23. Fonts and agent scripts are copied beside the executable. | Make platform dependencies conditional, confirm a suitable macOS C++23 toolchain and library packages, then bundle resources and scripts in a `.app`. Validate both architecture and resource lookup on the target Mac. |
+| Area | Current state |
+| --- | --- |
+| Window and drawing | SDL3 requests a macOS window with an OpenGL 4.1 context; the renderer keeps the same drawing code as Linux. An adapter maps SDL3 window, mouse, keyboard, text, and clipboard events to the canvas handlers. |
+| Project and language services | FSEvents watches file changes. Pipe wakeups, subprocesses, `clangd`, `gopls`, and the agent socket compile on both Mac architectures. |
+| Desktop integration | The folder picker uses `osascript`, links use `open`, and settings live under `~/Library/Application Support/source-canvas/`. |
+| Bundle | CMake produces `white_window.app` with fonts, `agent_bridge.py`, `intents.py`, and a High DPI plist. Homebrew dynamic libraries are not bundled. |
 
-The source graph, source panels, LSP clients (including `gopls`), agent JSON protocol and most canvas calculations appear reusable. POSIX process code in `process.cpp` is closer to macOS, but its socket flags and lifecycle still need a compile and runtime check.
+The remaining acceptance check needs a Mac with a graphical session: open a project, type and paste in search and chat, pan and zoom on a Retina display, follow Go/C++ definitions, watch file changes, and verify agent interaction. The system theme watcher still uses Linux desktop settings; the explicit Monokai setting works independently. Signing, notarization, and portable library bundling belong to the later release stage.
 
-A practical sequence is: (1) separate Xlib types from application logic while retaining the Linux backend; (2) compile the reusable libraries on macOS; (3) add the native window/input and OpenGL context; (4) replace watcher and desktop hooks; (5) test editing, Go/C++ navigation, text input, high-DPI scaling, agent approvals and packaged resource paths on a Mac. An XQuartz experiment would not establish native macOS compatibility or remove the Linux-specific APIs.
-
-**Rough effort:** approximately 2–4 weeks for a usable native prototype and another 1–2 weeks for integration and packaging, for one developer with a Mac and relevant desktop experience. This is an estimate from the current code structure, not a measured schedule. The main uncertainty is the spread of Xlib event types through UI code and tests; the OpenGL renderer itself does not require an immediate Metal rewrite. Apple documents OpenGL as deprecated but still available on Apple silicon: [Porting macOS apps to Apple silicon](https://developer.apple.com/documentation/apple-silicon/porting-your-macos-apps-to-apple-silicon).
+Build commands and dependencies are in the [README](../README.md#experimental-macos-build). The [macOS CI workflow](../.github/workflows/macos-port.yml) records the two architecture builds and focused platform checks.
