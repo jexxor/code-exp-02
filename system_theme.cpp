@@ -25,7 +25,7 @@ std::optional<bool> preferred_dark_theme(unsigned preference)
     return std::nullopt;
 }
 namespace {
-using VariantHandle = Handle<GVariant, g_variant_unref>;
+using VariantHandle = UniqueHandle<GVariant, g_variant_unref>;
 
 VariantHandle unbox(GVariant* reply)
 {
@@ -44,7 +44,7 @@ std::string setting(GSettings* settings, const char* key)
 }
 } // namespace
 struct SystemTheme::Impl {
-    using MainContext = Handle<GMainContext, g_main_context_unref>;
+    using MainContext = UniqueHandle<GMainContext, g_main_context_unref>;
     WakeSignal events;
     MainContext context{g_main_context_new()};
     std::mutex mutex;
@@ -122,7 +122,7 @@ struct SystemTheme::Impl {
     // NOLINTEND(readability-function-size)
     void watch_settings()
     {
-        using Schema = Handle<GSettingsSchema, g_settings_schema_unref>;
+        using Schema = UniqueHandle<GSettingsSchema, g_settings_schema_unref>;
         auto* source = g_settings_schema_source_get_default();
         const Schema schema{
             source ? g_settings_schema_source_lookup(source, "org.gnome.desktop.interface", true)

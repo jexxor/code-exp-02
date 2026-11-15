@@ -20,7 +20,7 @@ void source_matches(SearchCanvas& search, const SourcePanel& panel, GRegex* patt
          ++line) {
         GMatchInfo* raw = nullptr;
         g_regex_match(pattern, panel.text[line].c_str(), G_REGEX_MATCH_DEFAULT, &raw);
-        const Handle<GMatchInfo, g_match_info_free> info{raw};
+        const UniqueHandle<GMatchInfo, g_match_info_free> info{raw};
         while (g_match_info_matches(info.get()) && search.matches.size() < match_limit) {
             int first = 0, last = 0;
             g_match_info_fetch_pos(info.get(), 0, &first, &last);
@@ -74,7 +74,7 @@ void Application::update_search()
     if (search.query.text.empty())
         return;
     const GStringHandle literal{g_regex_escape_string(search.query.text.c_str(), -1)};
-    const Handle<GRegex, g_regex_unref> pattern{g_regex_new(
+    const UniqueHandle<GRegex, g_regex_unref> pattern{g_regex_new(
         literal.get(), static_cast<GRegexCompileFlags>(G_REGEX_CASELESS | G_REGEX_OPTIMIZE),
         G_REGEX_MATCH_DEFAULT, nullptr)};
     if (!pattern)

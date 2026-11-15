@@ -20,7 +20,7 @@ void Application::draw_selection_layout(PangoLayout* layout, Vec2 origin, double
         int count = 0;
         pango_layout_line_get_x_ranges(line, static_cast<int>(begin), static_cast<int>(end), &found,
                                        &count);
-        const Handle<int, g_free> owned{found};
+        const UniqueHandle<int, g_free> owned{found};
         const std::span ranges(found, static_cast<std::size_t>(count) * 2);
         for (std::size_t i = 0; i < ranges.size() / 2; ++i)
             renderer->rectangle(

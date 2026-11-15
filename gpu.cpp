@@ -144,7 +144,7 @@ struct GpuRenderer::Impl {
         display = connection;
         std::array<int, 9> attributes{
             GLX_RGBA, GLX_DOUBLEBUFFER, GLX_RED_SIZE, 8, GLX_GREEN_SIZE, 8, GLX_BLUE_SIZE, 8, None};
-        const Handle<XVisualInfo, XFree> visual{
+        const UniqueHandle<XVisualInfo, XFree> visual{
             glXChooseVisual(display, screen, attributes.data())};
         if (!visual)
             throw std::runtime_error("No OpenGL window visual available");

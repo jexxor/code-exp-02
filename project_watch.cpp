@@ -47,7 +47,7 @@ std::vector<std::filesystem::path> git_files(const std::string& root)
     const auto command =
         "git -C " + quoted + "' ls-files -z --cached --others --exclude-standard 2>/dev/null";
     std::vector<std::filesystem::path> files;
-    Handle<FILE, pclose> pipe{popen(command.c_str(), "r")};
+    UniqueHandle<FILE, pclose> pipe{popen(command.c_str(), "r")};
     if (!pipe)
         return files;
     std::string output;

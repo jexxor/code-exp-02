@@ -10,7 +10,7 @@ std::optional<std::string> Application::pasted_text(const XEvent& event)
                            AnyPropertyType, &type, &format, &count, &remaining,
                            &property) != Success)
         return std::nullopt;
-    const Handle<unsigned char, XFree> bytes{property};
+    const UniqueHandle<unsigned char, XFree> bytes{property};
     const auto* text = reinterpret_cast<const char*>(bytes.get());
     if (!bytes || format != 8 || !g_utf8_validate(text, static_cast<gssize>(count), nullptr))
         return std::nullopt;

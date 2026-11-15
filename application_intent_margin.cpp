@@ -17,7 +17,7 @@ std::string shell_quote(const std::string& text)
 std::string read_intent_view(const std::string& command)
 {
     std::string output;
-    if (Handle<FILE, pclose> pipe{popen(command.c_str(), "r")}) {
+    if (UniqueHandle<FILE, pclose> pipe{popen(command.c_str(), "r")}) {
         std::array<char, 65536> buffer{};
         while (const auto count = fread(buffer.data(), 1, buffer.size(), pipe.get()))
             output.append(buffer.data(), count);
