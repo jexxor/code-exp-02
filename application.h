@@ -152,6 +152,7 @@ class Application {
     int pixel_width = 800;
     int pixel_height = 600;
     Camera camera;
+    static constexpr double readable_zoom = 0.35;
     ZoomAnimation zoom_animation;
     bool initial_view = true;
     unsigned drag_button = 0;

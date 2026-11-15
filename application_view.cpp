@@ -114,7 +114,8 @@ void Application::draw_files(const Viewport& view)
         draw_source_selection(panel, origin);
         const Vec2 mesh_origin{origin.x,
                                origin.y + (panel.image ? header_height * camera.zoom : 0)};
-        renderer->draw(panel.mesh, mesh_origin, camera.zoom);
+        if (panel.image || camera.zoom >= readable_zoom)
+            renderer->draw(panel.mesh, mesh_origin, camera.zoom);
     }
 }
 
